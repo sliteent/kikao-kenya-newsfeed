@@ -1,6 +1,4 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -8,27 +6,12 @@ import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { Clock, Eye } from "lucide-react";
 
-const HeroCarousel = () => {
-  const { data: featuredArticles, isLoading } = useQuery({
-    queryKey: ['hero-articles'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('news_articles')
-        .select(`
-          *,
-          news_categories(name, slug)
-        `)
-        .eq('status', 'published')
-        .eq('is_featured', true)
-        .order('published_at', { ascending: false })
-        .limit(5);
-      
-      if (error) throw error;
-      return data;
-    }
-  });
+interface HeroCarouselProps {
+  articles: any[];
+}
 
-  if (isLoading || !featuredArticles?.length) {
+const HeroCarousel = ({ articles }: HeroCarouselProps) => {
+  if (!articles?.length) {
     return null;
   }
 
@@ -36,7 +19,7 @@ const HeroCarousel = () => {
     <section className="relative mb-12">
       <Carousel className="w-full">
         <CarouselContent>
-          {featuredArticles.map((article) => (
+          {articles.map((article) => (
             <CarouselItem key={article.id}>
               <Card className="border-0 rounded-lg overflow-hidden">
                 <div className="relative h-[400px] md:h-[500px]">
