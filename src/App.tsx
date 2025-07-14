@@ -11,8 +11,6 @@ import Article from "./pages/Article";
 import Category from "./pages/Category";
 import Search from "./pages/Search";
 import Admin from "./pages/Admin";
-import AdminAuth from "./pages/AdminAuth";
-import AdminResetPassword from "./pages/AdminResetPassword";
 import NotFound from "./pages/NotFound";
 import AdSense from "./components/AdSense";
 
@@ -33,8 +31,6 @@ const App = () => (
             <Route path="/category/:slug" element={<Category />} />
             <Route path="/search" element={<Search />} />
             <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/auth" element={<AdminAuth />} />
-            <Route path="/admin/reset-password" element={<AdminResetPassword />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

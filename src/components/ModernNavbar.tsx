@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Search, User } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ModernNavbar = () => {
@@ -51,13 +51,6 @@ const ModernNavbar = () => {
                 <Search className="h-4 w-4" />
               </Link>
             </Button>
-            
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/admin/auth">
-                <User className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Admin</span>
-              </Link>
-            </Button>
 
             {/* Mobile menu button */}
             <Button
@@ -96,13 +89,6 @@ const ModernNavbar = () => {
                   {category.name}
                 </Link>
               ))}
-              <Link
-                to="/admin/auth"
-                className="block px-3 py-2 text-gray-700 hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Admin Panel
-              </Link>
             </div>
           </div>
         )}
