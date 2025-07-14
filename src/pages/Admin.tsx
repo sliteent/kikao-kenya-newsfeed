@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,29 +60,29 @@ const Admin = () => {
     }
   });
 
-  // Manual RSS refresh
+  // Enhanced RSS refresh for multiple sources
   const refreshRSS = useMutation({
     mutationFn: async () => {
-      console.log('Starting RSS fetch...');
-      const { data, error } = await supabase.functions.invoke('fetch-rss');
-      console.log('RSS fetch response:', data, error);
+      console.log('Starting multi-source RSS fetch...');
+      const { data, error } = await supabase.functions.invoke('fetch-multiple-sources');
+      console.log('Multi-source RSS fetch response:', data, error);
       if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
-      console.log('RSS fetch successful:', data);
+      console.log('Multi-source RSS fetch successful:', data);
       toast({
         title: "News Updated Successfully",
-        description: `Processed ${data.processed} items, added ${data.inserted} new articles from Tuko.co.ke`,
+        description: `${data.message}. Added ${data.inserted} new articles from ${data.sources?.length || 'multiple'} sources.`,
       });
       queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
       setHasAutoFetched(true);
     },
     onError: (error) => {
-      console.error('RSS fetch error:', error);
+      console.error('Multi-source RSS fetch error:', error);
       toast({
         title: "Update Failed",
-        description: error.message,
+        description: error.message || "Failed to fetch from news sources",
         variant: "destructive",
       });
     }
@@ -204,7 +203,7 @@ const Admin = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">Content Management</h1>
-              <p className="text-primary-foreground/80">Manage Kikao Kenya Newsfeed</p>
+              <p className="text-primary-foreground/80">Manage Kikao Kenya Newsfeed - Multi-Source Aggregation</p>
             </div>
             <div className="flex gap-3">
               <Button 
@@ -213,7 +212,7 @@ const Admin = () => {
                 disabled={isRefreshing}
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                Update from Tuko.co.ke
+                Update from All Sources
               </Button>
               
               <Dialog open={isAddingPost} onOpenChange={setIsAddingPost}>
@@ -277,8 +276,8 @@ const Admin = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Enhanced Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -312,6 +311,22 @@ const Admin = () => {
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
                 {articles?.reduce((sum, a) => sum + a.view_count, 0) || 0}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Auto-Sync Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm font-medium text-green-600">
+                ✓ Multi-Source Active
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Tuko, Nation, Standard, Citizen
               </div>
             </CardContent>
           </Card>

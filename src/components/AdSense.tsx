@@ -18,7 +18,16 @@ const AdSense = () => {
     }
   }, []);
 
-  return null;
+  return (
+    <>
+      {/* AdSense Script */}
+      <script 
+        async 
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2476314154529501"
+        crossOrigin="anonymous"
+      />
+    </>
+  );
 };
 
 export default AdSense;
