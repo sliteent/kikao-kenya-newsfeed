@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Facebook, Twitter, Whatsapp, Link as LinkIcon } from "lucide-react";
+import { Facebook, Twitter, MessageCircle, Link as LinkIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SocialShareProps {
@@ -60,7 +60,7 @@ const SocialShare = ({ title, url }: SocialShareProps) => {
         size="sm"
         onClick={() => window.open(shareLinks.whatsapp, '_blank')}
       >
-        <Whatsapp className="h-4 w-4" />
+        <MessageCircle className="h-4 w-4" />
       </Button>
       
       <Button
