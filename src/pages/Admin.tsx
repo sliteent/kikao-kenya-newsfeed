@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,14 +89,13 @@ const Admin = () => {
     }
   });
 
-  // Auto-fetch RSS when page loads if no articles exist
+  // Auto-fetch RSS when page loads if no articles exist (silently in background)
   useEffect(() => {
-    if (!isLoading && articles && articles.length === 0 && !hasAutoFetched && !isRefreshing) {
-      console.log('No articles found, auto-fetching RSS...');
-      setIsRefreshing(true);
+    if (!isLoading && articles && articles.length === 0 && !hasAutoFetched) {
+      console.log('No articles found, auto-fetching RSS in background...');
       refreshRSS.mutate();
     }
-  }, [articles, isLoading, hasAutoFetched, isRefreshing]);
+  }, [articles, isLoading, hasAutoFetched]);
 
   // Create new post
   const createPost = useMutation({
@@ -182,14 +182,14 @@ const Admin = () => {
     createPost.mutate(newPost);
   };
 
-  // Show loading state during auto-fetch
-  if (isLoading || (articles && articles.length === 0 && isRefreshing)) {
+  // Show loading state only for initial page load
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Loading Latest News</h2>
-          <p className="text-muted-foreground">Fetching articles from Tuko.co.ke...</p>
+          <h2 className="text-xl font-semibold mb-2">Loading Admin Panel</h2>
+          <p className="text-muted-foreground">Please wait...</p>
         </div>
       </div>
     );
@@ -385,7 +385,9 @@ const Admin = () => {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No articles found. Click "Update from Tuko.co.ke" to fetch the latest news.</p>
+                <p className="text-muted-foreground">
+                  {refreshRSS.isPending ? 'Fetching latest news in background...' : 'No articles found. Click "Update from All Sources" to fetch the latest news.'}
+                </p>
               </div>
             )}
           </CardContent>
