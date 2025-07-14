@@ -11,6 +11,7 @@ import Category from "./pages/Category";
 import Search from "./pages/Search";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import AdSense from "./components/AdSense";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <AdSense />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
