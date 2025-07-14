@@ -1,11 +1,10 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Plus, Trash2, BarChart } from "lucide-react";
+import { RefreshCw, Plus, Trash2, BarChart, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
@@ -19,6 +18,7 @@ const Admin = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAddingPost, setIsAddingPost] = useState(false);
   const [hasAutoFetched, setHasAutoFetched] = useState(false);
+  const [isPublishingManual, setIsPublishingManual] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
   const [newPost, setNewPost] = useState({
     title: '',
@@ -89,13 +89,104 @@ const Admin = () => {
     }
   });
 
-  // Auto-fetch RSS when page loads if no articles exist (silently in background)
-  useEffect(() => {
-    if (!isLoading && articles && articles.length === 0 && !hasAutoFetched) {
-      console.log('No articles found, auto-fetching RSS in background...');
-      refreshRSS.mutate();
+  // Manual article publishing
+  const publishManualArticles = useMutation({
+    mutationFn: async () => {
+      console.log('Publishing manual articles...');
+      
+      const sampleArticles = [
+        {
+          title: "Kenya's Economic Growth Projected to Rise in 2024",
+          content: "Kenya's economy shows promising signs of recovery with projected growth rates increasing due to improved agricultural output and tourism sector performance. The Central Bank of Kenya has maintained an optimistic outlook for the remainder of the year.",
+          excerpt: "Kenya's economy shows promising signs of recovery with projected growth rates increasing due to improved agricultural output.",
+          category_id: categories?.find(cat => cat.slug === 'business')?.id || categories?.[0]?.id,
+          source_url: "https://www.nation.co.ke/kenya/business/economy-growth-2024",
+          author: "Nation Media",
+          featured_image: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&h=600&fit=crop"
+        },
+        {
+          title: "Harambee Stars Prepare for AFCON Qualifiers",
+          content: "The Kenyan national football team, Harambee Stars, is intensifying preparations for the upcoming African Cup of Nations qualifiers. Coach Engin Firat has called up several local and international players for the crucial matches ahead.",
+          excerpt: "Harambee Stars intensify preparations for upcoming AFCON qualifiers with coach Engin Firat calling up key players.",
+          category_id: categories?.find(cat => cat.slug === 'sports')?.id || categories?.[0]?.id,
+          source_url: "https://www.standardmedia.co.ke/sports/football/harambee-stars-afcon",
+          author: "Standard Media",
+          featured_image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=600&fit=crop"
+        },
+        {
+          title: "New Education Reforms Announced by Ministry",
+          content: "The Ministry of Education has announced comprehensive reforms to improve the quality of education in Kenya. The new policies focus on enhancing teacher training, improving infrastructure, and integrating technology in classrooms.",
+          excerpt: "Ministry of Education announces comprehensive reforms focusing on teacher training and technology integration.",
+          category_id: categories?.find(cat => cat.slug === 'latest')?.id || categories?.[0]?.id,
+          source_url: "https://www.citizentv.co.ke/news/education-reforms-announced",
+          author: "Citizen Digital",
+          featured_image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=600&fit=crop"
+        },
+        {
+          title: "Nairobi Traffic Decongestion Plans Unveiled",
+          content: "The Nairobi Metropolitan Area Transport Authority has unveiled new plans to reduce traffic congestion in the capital. The initiative includes expanding public transport networks and implementing smart traffic management systems.",
+          excerpt: "Nairobi unveils new traffic decongestion plans including expanded public transport and smart traffic systems.",
+          category_id: categories?.find(cat => cat.slug === 'latest')?.id || categories?.[0]?.id,
+          source_url: "https://www.tuko.co.ke/nairobi/traffic-decongestion-plans",
+          author: "Tuko.co.ke",
+          featured_image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&h=600&fit=crop"
+        },
+        {
+          title: "Kenya's Tech Startup Scene Continues to Thrive",
+          content: "Kenya's technology sector continues to attract significant investment with several startups securing major funding rounds. The country remains a leading tech hub in East Africa, with innovations in fintech, agritech, and healthtech sectors.",
+          excerpt: "Kenya's tech startups secure major funding rounds, maintaining the country's position as East Africa's leading tech hub.",
+          category_id: categories?.find(cat => cat.slug === 'technology')?.id || categories?.[0]?.id,
+          source_url: "https://www.nation.co.ke/kenya/business/tech-startups-funding",
+          author: "Nation Media",
+          featured_image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&h=600&fit=crop"
+        }
+      ];
+
+      let insertedCount = 0;
+      
+      for (const article of sampleArticles) {
+        const slug = article.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .substring(0, 100);
+
+        const { error } = await supabase
+          .from('news_articles')
+          .insert({
+            ...article,
+            slug: `${slug}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            status: 'published',
+            published_at: new Date().toISOString(),
+            rss_guid: `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          });
+
+        if (error) {
+          console.error('Error inserting manual article:', error);
+        } else {
+          insertedCount++;
+          console.log(`Inserted manual article: ${article.title}`);
+        }
+      }
+
+      return { inserted: insertedCount, total: sampleArticles.length };
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Manual Articles Published",
+        description: `Successfully published ${data.inserted} out of ${data.total} articles`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
+    },
+    onError: (error) => {
+      console.error('Manual article publish error:', error);
+      toast({
+        title: "Publishing Failed",
+        description: error.message || "Failed to publish manual articles",
+        variant: "destructive",
+      });
     }
-  }, [articles, isLoading, hasAutoFetched]);
+  });
 
   // Create new post
   const createPost = useMutation({
@@ -170,6 +261,15 @@ const Admin = () => {
     }
   };
 
+  const handlePublishManualArticles = async () => {
+    setIsPublishingManual(true);
+    try {
+      await publishManualArticles.mutateAsync();
+    } finally {
+      setIsPublishingManual(false);
+    }
+  };
+
   const handleCreatePost = () => {
     if (!newPost.title || !newPost.content || !newPost.category_id) {
       toast({
@@ -212,7 +312,20 @@ const Admin = () => {
                 disabled={isRefreshing}
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                Update from All Sources
+                Update from RSS Sources
+              </Button>
+
+              <Button 
+                variant="secondary" 
+                onClick={handlePublishManualArticles}
+                disabled={isPublishingManual}
+              >
+                {isPublishingManual ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4 mr-2" />
+                )}
+                Publish Sample Articles
               </Button>
               
               <Dialog open={isAddingPost} onOpenChange={setIsAddingPost}>
@@ -358,6 +471,11 @@ const Admin = () => {
                         {article.is_featured && (
                           <Badge variant="default">Featured</Badge>
                         )}
+                        {article.source_url && (
+                          <Badge variant="outline" className="text-xs">
+                            External
+                          </Badge>
+                        )}
                       </div>
                       
                       <h3 className="font-medium mb-1 line-clamp-1">{article.title}</h3>
@@ -368,6 +486,17 @@ const Admin = () => {
                       <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
                         <span>Views: {article.view_count}</span>
                         <span>Published: {article.published_at ? format(new Date(article.published_at), 'MMM dd, yyyy') : 'Not published'}</span>
+                        {article.author && <span>By: {article.author}</span>}
+                        {article.source_url && (
+                          <a 
+                            href={article.source_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            View Source
+                          </a>
+                        )}
                       </div>
                     </div>
                     
@@ -385,9 +514,27 @@ const Admin = () => {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  {refreshRSS.isPending ? 'Fetching latest news in background...' : 'No articles found. Click "Update from All Sources" to fetch the latest news.'}
+                <p className="text-muted-foreground mb-4">
+                  {refreshRSS.isPending ? 'Fetching latest news in background...' : 'No articles found yet.'}
                 </p>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={handleRefreshRSS} disabled={isRefreshing}>
+                    {isRefreshing ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    )}
+                    Fetch from RSS Sources
+                  </Button>
+                  <Button onClick={handlePublishManualArticles} disabled={isPublishingManual} variant="outline">
+                    {isPublishingManual ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4 mr-2" />
+                    )}
+                    Add Sample Articles
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
