@@ -1,306 +1,201 @@
 
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, User, ArrowRight, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { format } from "date-fns";
+import { Eye, Clock, User } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const featuredNews = {
-    title: "President Ruto Announces New Infrastructure Development Plan",
-    excerpt: "The government unveils a comprehensive plan to modernize Kenya's infrastructure, focusing on digital connectivity and sustainable transport systems.",
-    image: "https://images.unsplash.com/photo-1577495508048-b635879837f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    category: "Politics",
-    readTime: "5 min read",
-    author: "John Kamau"
-  };
-
-  const newsArticles = [
-    {
-      id: 1,
-      title: "New Tax Reforms Announced in Parliament",
-      excerpt: "The National Assembly passed the Finance Bill 2025 with significant tax reforms aimed at boosting economic growth and reducing the burden on small businesses.",
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-      category: "Politics",
-      readTime: "3 min read",
-      author: "Mary Wanjiku"
-    },
-    {
-      id: 2,
-      title: "Top Kenyan Artist Launches New Album",
-      excerpt: "Thousands gather in Nairobi to celebrate the much-anticipated release of the latest album by one of Kenya's most celebrated musicians.",
-      image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-      category: "Entertainment",
-      readTime: "4 min read",
-      author: "Peter Otieno"
-    },
-    {
-      id: 3,
-      title: "Football League Kicks Off with Surprises",
-      excerpt: "The FKF Premier League season opens with unexpected results and promising performances from emerging teams.",
-      image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-      category: "Sports",
-      readTime: "2 min read",
-      author: "James Ochieng"
-    },
-    {
-      id: 4,
-      title: "Kenya's Tech Sector Shows Remarkable Growth",
-      excerpt: "New data reveals that Kenya's technology sector has grown by 15% this year, positioning the country as a regional tech hub.",
-      image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-      category: "Business",
-      readTime: "6 min read",
-      author: "Grace Muthoni"
-    },
-    {
-      id: 5,
-      title: "Wildlife Conservation Efforts Show Success",
-      excerpt: "Kenya's wildlife conservation programs report significant increases in endangered species populations across national parks.",
-      image: "https://images.unsplash.com/photo-1549366021-9f761d040a94?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-      category: "Environment",
-      readTime: "4 min read",
-      author: "David Kiprop"
-    },
-    {
-      id: 6,
-      title: "Education Reforms Transform Rural Schools",
-      excerpt: "Government's new education initiative brings modern learning facilities and digital resources to rural communities across Kenya.",
-      image: "https://images.unsplash.com/photo-1497486751825-1233686d5d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-      category: "Education",
-      readTime: "5 min read",
-      author: "Sarah Njeri"
+  // Fetch latest articles
+  const { data: articles, isLoading } = useQuery({
+    queryKey: ['news-articles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('news_articles')
+        .select(`
+          *,
+          news_categories(name, slug)
+        `)
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(20);
+      
+      if (error) throw error;
+      return data;
     }
-  ];
+  });
 
-  const navItems = ["Home", "Politics", "Business", "Entertainment", "Sports", "Contact"];
+  // Fetch featured articles
+  const { data: featuredArticles } = useQuery({
+    queryKey: ['featured-articles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('news_articles')
+        .select(`
+          *,
+          news_categories(name, slug)
+        `)
+        .eq('status', 'published')
+        .eq('is_featured', true)
+        .order('published_at', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      Politics: "bg-red-100 text-red-800",
-      Entertainment: "bg-purple-100 text-purple-800",
-      Sports: "bg-blue-100 text-blue-800",
-      Business: "bg-green-100 text-green-800",
-      Environment: "bg-emerald-100 text-emerald-800",
-      Education: "bg-orange-100 text-orange-800"
-    };
-    return colors[category as keyof typeof colors] || "bg-gray-100 text-gray-800";
-  };
+  // Fetch categories
+  const { data: categories } = useQuery({
+    queryKey: ['news-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('news_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const ArticleCard = ({ article, featured = false }: { article: any, featured?: boolean }) => (
+    <Card className={`hover:shadow-lg transition-shadow ${featured ? 'border-primary' : ''}`}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2 mb-2">
+          {article.news_categories && (
+            <Badge variant="secondary" className="text-xs">
+              {article.news_categories.name}
+            </Badge>
+          )}
+          {featured && <Badge variant="default">Featured</Badge>}
+        </div>
+        <CardTitle className={`${featured ? 'text-xl' : 'text-lg'} line-clamp-2`}>
+          <Link 
+            to={`/article/${article.slug}`}
+            className="hover:text-primary transition-colors"
+          >
+            {article.title}
+          </Link>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+          {article.excerpt}
+        </p>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center gap-4">
+            {article.author && (
+              <div className="flex items-center gap-1">
+                <User className="h-3 w-3" />
+                <span>{article.author}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <span>{format(new Date(article.published_at), 'MMM dd, yyyy')}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Eye className="h-3 w-3" />
+              <span>{article.view_count}</span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Loading news...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <header className="bg-[#004d40] text-white shadow-lg sticky top-0 z-50">
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="bg-primary text-primary-foreground py-6">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center py-4">
-            <div className="text-2xl font-bold">DailyKikao</div>
-            
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-8">
-              {navItems.map((item) => (
-                <a
-                  key={item}
-                  href="#"
-                  className="hover:text-[#4db6ac] transition-colors duration-200 font-medium"
-                >
-                  {item}
-                </a>
-              ))}
-            </nav>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-[#00695c] transition-colors"
-            >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Kikao Kenya Newsfeed</h1>
+              <p className="text-primary-foreground/80">Your trusted source for Kenyan news</p>
+            </div>
+            <Button variant="secondary" asChild>
+              <Link to="/admin">Admin</Link>
+            </Button>
           </div>
-
-          {/* Mobile Navigation */}
-          {isMenuOpen && (
-            <nav className="md:hidden pb-4 animate-fade-in">
-              {navItems.map((item) => (
-                <a
-                  key={item}
-                  href="#"
-                  className="block py-2 px-4 hover:bg-[#00695c] rounded-lg transition-colors duration-200"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item}
-                </a>
-              ))}
-            </nav>
-          )}
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-[#00796b] to-[#004d40] text-white py-16">
+      {/* Navigation */}
+      <nav className="bg-secondary py-3">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="animate-fade-in">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-                Breaking News: Stay Updated with DailyKikao
-              </h1>
-              <p className="text-xl mb-6 text-gray-100">
-                Your reliable source for Kenyan news and insights
-              </p>
-              <Button className="bg-white text-[#004d40] hover:bg-gray-100 font-semibold px-8 py-3 rounded-full transition-all duration-200 hover:scale-105">
-                Read Latest News
-                <ArrowRight className="ml-2" size={18} />
-              </Button>
-            </div>
-            
-            {/* Featured News Card */}
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105">
-              <CardContent className="p-0">
-                <img
-                  src={featuredNews.image}
-                  alt="Featured news"
-                  className="w-full h-48 object-cover rounded-t-lg"
-                />
-                <div className="p-6">
-                  <Badge className={`mb-3 ${getCategoryColor(featuredNews.category)}`}>
-                    {featuredNews.category}
-                  </Badge>
-                  <h3 className="text-lg font-semibold mb-2 text-white">
-                    {featuredNews.title}
-                  </h3>
-                  <p className="text-gray-200 text-sm mb-4">
-                    {featuredNews.excerpt}
-                  </p>
-                  <div className="flex items-center text-sm text-gray-300 space-x-4">
-                    <div className="flex items-center">
-                      <User size={14} className="mr-1" />
-                      {featuredNews.author}
-                    </div>
-                    <div className="flex items-center">
-                      <Clock size={14} className="mr-1" />
-                      {featuredNews.readTime}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="flex items-center gap-6 overflow-x-auto">
+            <Link to="/" className="text-sm font-medium hover:text-primary transition-colors whitespace-nowrap">
+              Home
+            </Link>
+            {categories?.map((category) => (
+              <Link
+                key={category.id}
+                to={`/category/${category.slug}`}
+                className="text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
+              >
+                {category.name}
+              </Link>
+            ))}
           </div>
         </div>
-      </section>
+      </nav>
 
-      {/* News Section */}
-      <main className="container mx-auto px-4 py-12">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Latest News</h2>
-          <div className="w-20 h-1 bg-[#00796b] rounded-full"></div>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        {/* Featured Section */}
+        {featuredArticles && featuredArticles.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <span className="bg-primary text-primary-foreground px-3 py-1 rounded">Featured</span>
+              Stories
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredArticles.map((article) => (
+                <ArticleCard key={article.id} article={article} featured />
+              ))}
+            </div>
+            <Separator className="mt-8" />
+          </section>
+        )}
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {newsArticles.map((article, index) => (
-            <Card
-              key={article.id}
-              className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer animate-fade-in"
-              style={{
-                animationDelay: `${index * 100}ms`
-              }}
-            >
-              <CardContent className="p-0">
-                <div className="relative overflow-hidden">
-                  <img
-                    src={article.image}
-                    alt={article.title}
-                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <Badge
-                    className={`absolute top-4 left-4 ${getCategoryColor(article.category)}`}
-                  >
-                    {article.category}
-                  </Badge>
-                </div>
-                
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-3 text-gray-800 group-hover:text-[#00796b] transition-colors duration-200 line-clamp-2">
-                    {article.title}
-                  </h3>
-                  <p className="text-gray-600 mb-4 text-sm leading-relaxed line-clamp-3">
-                    {article.excerpt}
-                  </p>
-                  
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center">
-                        <User size={14} className="mr-1" />
-                        {article.author}
-                      </div>
-                      <div className="flex items-center">
-                        <Clock size={14} className="mr-1" />
-                        {article.readTime}
-                      </div>
-                    </div>
-                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Load More Button */}
-        <div className="text-center mt-12">
-          <Button className="bg-[#00796b] hover:bg-[#004d40] text-white px-8 py-3 rounded-full font-semibold transition-all duration-200 hover:scale-105">
-            Load More Stories
-          </Button>
-        </div>
-      </main>
+        {/* Latest News */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <span className="bg-secondary text-secondary-foreground px-3 py-1 rounded">Latest</span>
+            News
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {articles?.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </div>
+        </section>
+      </div>
 
       {/* Footer */}
-      <footer className="bg-[#004d40] text-white mt-16">
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-xl font-bold mb-4">DailyKikao</h3>
-              <p className="text-gray-300 text-sm">
-                Kenya's trusted source for news, insights, and stories that matter.
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Categories</h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li><a href="#" className="hover:text-white transition-colors">Politics</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Business</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Sports</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Entertainment</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">About</h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Follow Us</h4>
-              <p className="text-gray-300 text-sm mb-4">
-                Stay connected for the latest updates
-              </p>
-              <div className="space-x-4">
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">Facebook</a>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">Twitter</a>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-600 mt-8 pt-8 text-center">
-            <p className="text-gray-300 text-sm">
-              © 2025 DailyKikao. Built by Samuel Theuri. All rights reserved.
-            </p>
-          </div>
+      <footer className="bg-secondary text-secondary-foreground py-8 mt-16">
+        <div className="container mx-auto px-4 text-center">
+          <h3 className="text-lg font-semibold mb-2">Kikao Kenya Newsfeed</h3>
+          <p className="text-sm opacity-80">
+            Powered by RSS feeds from trusted Kenyan news sources
+          </p>
+          <p className="text-xs opacity-60 mt-2">
+            © 2024 Kikao Kenya Newsfeed. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>
