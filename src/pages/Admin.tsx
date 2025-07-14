@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, Plus, Trash2, Edit, BarChart } from "lucide-react";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +18,7 @@ const Admin = () => {
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAddingPost, setIsAddingPost] = useState(false);
+  const [hasAutoFetched, setHasAutoFetched] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
   const [newPost, setNewPost] = useState({
     title: '',
@@ -63,18 +64,23 @@ const Admin = () => {
   // Manual RSS refresh
   const refreshRSS = useMutation({
     mutationFn: async () => {
+      console.log('Starting RSS fetch...');
       const { data, error } = await supabase.functions.invoke('fetch-rss');
+      console.log('RSS fetch response:', data, error);
       if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
+      console.log('RSS fetch successful:', data);
       toast({
         title: "News Updated Successfully",
         description: `Processed ${data.processed} items, added ${data.inserted} new articles from Tuko.co.ke`,
       });
       queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
+      setHasAutoFetched(true);
     },
     onError: (error) => {
+      console.error('RSS fetch error:', error);
       toast({
         title: "Update Failed",
         description: error.message,
@@ -82,6 +88,15 @@ const Admin = () => {
       });
     }
   });
+
+  // Auto-fetch RSS when page loads if no articles exist
+  useEffect(() => {
+    if (!isLoading && articles && articles.length === 0 && !hasAutoFetched && !isRefreshing) {
+      console.log('No articles found, auto-fetching RSS...');
+      setIsRefreshing(true);
+      refreshRSS.mutate();
+    }
+  }, [articles, isLoading, hasAutoFetched, isRefreshing]);
 
   // Create new post
   const createPost = useMutation({
@@ -167,6 +182,19 @@ const Admin = () => {
     }
     createPost.mutate(newPost);
   };
+
+  // Show loading state during auto-fetch
+  if (isLoading || (articles && articles.length === 0 && isRefreshing)) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Loading Latest News</h2>
+          <p className="text-muted-foreground">Fetching articles from Tuko.co.ke...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -298,11 +326,9 @@ const Admin = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">Loading articles...</div>
-            ) : (
+            {articles && articles.length > 0 ? (
               <div className="space-y-4">
-                {articles?.map((article) => (
+                {articles.map((article) => (
                   <div key={article.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
@@ -341,6 +367,10 @@ const Admin = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No articles found. Click "Update from Tuko.co.ke" to fetch the latest news.</p>
               </div>
             )}
           </CardContent>
