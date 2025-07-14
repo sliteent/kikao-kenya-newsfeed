@@ -1,190 +1,109 @@
 
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
+import { Menu, X, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { 
-  Menu, 
-  Search, 
-  Settings, 
-  Home, 
-  Newspaper, 
-  TrendingUp,
-  Globe,
-  Zap
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 const ModernNavbar = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const { data: categories } = useQuery({
-    queryKey: ['navbar-categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('news_categories')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery("");
-      setIsSearchOpen(false);
-    }
-  };
-
-  const isActive = (path: string) => location.pathname === path;
-
-  const mainNavItems = [
-    { name: "Home", path: "/", icon: Home },
-    { name: "Latest", path: "/news", icon: Newspaper },
-    { name: "Politics", path: "/category/politics", icon: Globe },
-    { name: "Sports", path: "/category/sports", icon: TrendingUp },
-    { name: "Business", path: "/category/business", icon: Zap },
-    { name: "Entertainment", path: "/category/entertainment", icon: TrendingUp },
+  const categories = [
+    { name: "Latest", slug: "latest" },
+    { name: "Politics", slug: "politics" },
+    { name: "Entertainment", slug: "entertainment" },
+    { name: "Sports", slug: "sports" },
+    { name: "Business", slug: "business" },
+    { name: "Technology", slug: "technology" }
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+    <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        {/* Top Bar */}
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+          {/* Brand */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="bg-primary text-primary-foreground w-8 h-8 rounded-lg flex items-center justify-center font-bold">
-              K
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="text-xl font-bold text-foreground">Kikao Kenya</h1>
-              <p className="text-xs text-muted-foreground">News & Updates</p>
-            </div>
+            <div className="text-2xl font-bold text-primary">Kikao Kenya</div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-6">
-            {mainNavItems.map((item) => (
+          <div className="hidden md:flex items-center space-x-8">
+            <Link 
+              to="/news" 
+              className="text-gray-700 hover:text-primary transition-colors"
+            >
+              All News
+            </Link>
+            {categories.map((category) => (
               <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
-                  isActive(item.path)
-                    ? "bg-primary text-primary-foreground"
-                    : "text-foreground hover:bg-secondary"
-                }`}
+                key={category.slug}
+                to={`/category/${category.slug}`}
+                className="text-gray-700 hover:text-primary transition-colors"
               >
-                <item.icon className="w-4 h-4" />
-                <span className="font-medium">{item.name}</span>
+                {category.name}
               </Link>
             ))}
           </div>
 
-          {/* Right Side Actions */}
-          <div className="flex items-center space-x-2">
-            {/* Search Toggle */}
+          {/* Right side buttons */}
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/search">
+                <Search className="h-4 w-4" />
+              </Link>
+            </Button>
+            
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/admin/auth">
+                <User className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Admin</span>
+              </Link>
+            </Button>
+
+            {/* Mobile menu button */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="lg:hidden"
+              className="md:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              <Search className="w-4 h-4" />
+              {isMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </Button>
-
-            {/* Desktop Search */}
-            <form onSubmit={handleSearch} className="hidden lg:flex items-center space-x-2">
-              <Input
-                type="text"
-                placeholder="Search news..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64"
-              />
-              <Button type="submit" size="sm">
-                <Search className="w-4 h-4" />
-              </Button>
-            </form>
-
-            {/* Admin Link */}
-            <Link to="/admin">
-              <Button variant="ghost" size="sm">
-                <Settings className="w-4 h-4" />
-              </Button>
-            </Link>
-
-            {/* Mobile Menu */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="lg:hidden">
-                  <Menu className="w-4 h-4" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-80">
-                <div className="py-6">
-                  <div className="space-y-4">
-                    {mainNavItems.map((item) => (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                          isActive(item.path)
-                            ? "bg-primary text-primary-foreground"
-                            : "text-foreground hover:bg-secondary"
-                        }`}
-                      >
-                        <item.icon className="w-5 h-5" />
-                        <span className="font-medium">{item.name}</span>
-                      </Link>
-                    ))}
-                    
-                    <div className="border-t pt-4">
-                      <h3 className="font-semibold mb-2 px-4">Categories</h3>
-                      {categories?.map((category) => (
-                        <Link
-                          key={category.id}
-                          to={`/category/${category.slug}`}
-                          className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
-                        >
-                          {category.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
           </div>
         </div>
 
-        {/* Mobile Search Bar */}
-        {isSearchOpen && (
-          <div className="lg:hidden py-4 border-t">
-            <form onSubmit={handleSearch} className="flex items-center space-x-2">
-              <Input
-                type="text"
-                placeholder="Search news..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1"
-                autoFocus
-              />
-              <Button type="submit" size="sm">
-                <Search className="w-4 h-4" />
-              </Button>
-            </form>
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden border-t bg-white">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <Link
+                to="/news"
+                className="block px-3 py-2 text-gray-700 hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                All News
+              </Link>
+              {categories.map((category) => (
+                <Link
+                  key={category.slug}
+                  to={`/category/${category.slug}`}
+                  className="block px-3 py-2 text-gray-700 hover:text-primary transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {category.name}
+                </Link>
+              ))}
+              <Link
+                to="/admin/auth"
+                className="block px-3 py-2 text-gray-700 hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Admin Panel
+              </Link>
+            </div>
           </div>
         )}
       </div>

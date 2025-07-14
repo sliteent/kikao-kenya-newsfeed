@@ -1,25 +1,28 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Plus, Trash2, Edit, BarChart } from "lucide-react";
+import { RefreshCw, Plus, Trash2, BarChart, LogOut, User } from "lucide-react";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useNavigate } from "react-router-dom";
 
-const Admin = () => {
+const AdminContent = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAddingPost, setIsAddingPost] = useState(false);
   const [hasAutoFetched, setHasAutoFetched] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
+  const [adminProfile, setAdminProfile] = useState<any>(null);
   const [newPost, setNewPost] = useState({
     title: '',
     content: '',
@@ -27,6 +30,27 @@ const Admin = () => {
     category_id: '',
     featured_image: ''
   });
+
+  // Get admin profile
+  useEffect(() => {
+    const getAdminProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('admin_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        setAdminProfile(profile);
+      }
+    };
+    getAdminProfile();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/admin/auth');
+  };
 
   // Fetch articles
   const { data: articles, isLoading } = useQuery({
@@ -205,7 +229,13 @@ const Admin = () => {
               <h1 className="text-3xl font-bold">Content Management</h1>
               <p className="text-primary-foreground/80">Manage Kikao Kenya Newsfeed - Multi-Source Aggregation</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex items-center gap-4">
+              {adminProfile && (
+                <div className="flex items-center gap-2 text-primary-foreground/80">
+                  <User className="h-4 w-4" />
+                  <span className="text-sm">{adminProfile.full_name || adminProfile.email}</span>
+                </div>
+              )}
               <Button 
                 variant="secondary" 
                 onClick={handleRefreshRSS}
@@ -270,6 +300,15 @@ const Admin = () => {
                   </div>
                 </DialogContent>
               </Dialog>
+
+              <Button 
+                variant="secondary" 
+                onClick={handleSignOut}
+                className="text-red-600 hover:text-red-700"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
@@ -394,6 +433,26 @@ const Admin = () => {
         </Card>
       </div>
     </div>
+  );
+};
+
+const Admin = () => {
+  return (
+    <ProtectedRoute
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
+            <p className="text-muted-foreground mb-4">You need admin privileges to access this page.</p>
+            <Button onClick={() => window.location.href = '/admin/auth'}>
+              Go to Admin Login
+            </Button>
+          </div>
+        </div>
+      }
+    >
+      <AdminContent />
+    </ProtectedRoute>
   );
 };
 
