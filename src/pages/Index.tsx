@@ -6,19 +6,38 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
-import { Eye, Clock, User, Menu } from "lucide-react";
+import { Eye, Clock, User, ArrowRight, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import HeroCarousel from "@/components/HeroCarousel";
 import SearchBar from "@/components/SearchBar";
 import NewsletterSignup from "@/components/NewsletterSignup";
-import { useState } from "react";
+import SocialShare from "@/components/SocialShare";
+import SEOHead from "@/components/SEOHead";
 
 const Index = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Fetch featured articles for hero carousel
+  const { data: featuredArticles } = useQuery({
+    queryKey: ['featured-articles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('news_articles')
+        .select(`
+          *,
+          news_categories(name, slug)
+        `)
+        .eq('status', 'published')
+        .eq('is_featured', true)
+        .order('published_at', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   // Fetch latest articles
-  const { data: articles, isLoading } = useQuery({
-    queryKey: ['news-articles'],
+  const { data: latestArticles, isLoading } = useQuery({
+    queryKey: ['latest-articles'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('news_articles')
@@ -37,7 +56,7 @@ const Index = () => {
 
   // Fetch categories
   const { data: categories } = useQuery({
-    queryKey: ['news-categories'],
+    queryKey: ['categories'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('news_categories')
@@ -50,8 +69,8 @@ const Index = () => {
     }
   });
 
-  const ArticleCard = ({ article, featured = false }: { article: any, featured?: boolean }) => (
-    <Card className={`hover:shadow-lg transition-shadow h-full ${featured ? 'border-primary' : ''}`}>
+  const ArticleCard = ({ article }: { article: any }) => (
+    <Card className="hover:shadow-lg transition-shadow h-full">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2 mb-2">
           {article.news_categories && (
@@ -59,9 +78,9 @@ const Index = () => {
               {article.news_categories.name}
             </Badge>
           )}
-          {featured && <Badge variant="default">Featured</Badge>}
+          {article.is_featured && <Badge variant="default">Featured</Badge>}
         </div>
-        <CardTitle className={`${featured ? 'text-xl' : 'text-lg'} line-clamp-2`}>
+        <CardTitle className="text-lg line-clamp-2">
           <Link 
             to={`/article/${article.slug}`}
             className="hover:text-primary transition-colors"
@@ -86,7 +105,7 @@ const Index = () => {
             )}
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              <span>{format(new Date(article.published_at), 'MMM dd, yyyy')}</span>
+              <span>{format(new Date(article.published_at), 'MMM dd')}</span>
             </div>
             <div className="flex items-center gap-1">
               <Eye className="h-3 w-3" />
@@ -103,135 +122,97 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-primary text-primary-foreground shadow-lg">
+      <SEOHead 
+        title="Kikao Kenya Newsfeed - Latest News from Kenya"
+        description="Stay updated with the latest news from Kenya. Politics, Entertainment, Sports, Business and more."
+      />
+      
+      {/* Header */}
+      <header className="bg-primary text-primary-foreground py-4 sticky top-0 z-50">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between py-4">
-            {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="bg-accent text-accent-foreground px-3 py-1 rounded font-bold text-xl">
-                K
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">Kikao Kenya</h1>
-                <p className="text-xs text-primary-foreground/80">Newsfeed</p>
-              </div>
+          <div className="flex items-center justify-between">
+            <Link to="/" className="text-2xl font-bold">
+              Kikao Kenya Newsfeed
             </Link>
-
-            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-6">
-              <Link to="/" className="hover:text-accent transition-colors font-medium">
+              <Link to="/" className="hover:text-primary-foreground/80 transition-colors">
                 Home
               </Link>
-              <Link to="/news" className="hover:text-accent transition-colors font-medium">
+              <Link to="/news" className="hover:text-primary-foreground/80 transition-colors">
                 News
               </Link>
               {categories?.slice(0, 4).map((category) => (
-                <Link
+                <Link 
                   key={category.id}
-                  to={`/category/${category.slug}`}
-                  className="hover:text-accent transition-colors font-medium capitalize"
+                  to={`/category/${category.slug}`} 
+                  className="hover:text-primary-foreground/80 transition-colors capitalize"
                 >
                   {category.name}
                 </Link>
               ))}
+              <Link to="/admin" className="hover:text-primary-foreground/80 transition-colors">
+                <Settings className="h-4 w-4" />
+              </Link>
             </nav>
-
-            {/* Search & Admin */}
-            <div className="hidden md:flex items-center space-x-4">
-              <SearchBar />
-              <Button variant="secondary" size="sm" asChild>
-                <Link to="/admin">Admin</Link>
-              </Button>
-            </div>
-
+            
             {/* Mobile Menu Button */}
-            <Button
-              variant="secondary"
-              size="sm"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <Menu className="h-4 w-4" />
+            <Button variant="ghost" size="sm" className="md:hidden">
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <span className="sr-only">Open menu</span>
             </Button>
           </div>
-
-          {/* Mobile Navigation */}
-          {mobileMenuOpen && (
-            <div className="md:hidden border-t border-primary-foreground/20 py-4">
-              <nav className="space-y-3">
-                <Link
-                  to="/"
-                  className="block hover:text-accent transition-colors font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Home
-                </Link>
-                <Link
-                  to="/news"
-                  className="block hover:text-accent transition-colors font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  News
-                </Link>
-                {categories?.map((category) => (
-                  <Link
-                    key={category.id}
-                    to={`/category/${category.slug}`}
-                    className="block hover:text-accent transition-colors font-medium capitalize"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {category.name}
-                  </Link>
-                ))}
-                <div className="pt-3 border-t border-primary-foreground/20">
-                  <SearchBar />
-                </div>
-                <Button variant="secondary" size="sm" asChild className="w-full">
-                  <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>Admin</Link>
-                </Button>
-              </nav>
-            </div>
-          )}
         </div>
       </header>
 
-      {/* Hero Carousel */}
-      <HeroCarousel />
+      {/* Search Bar */}
+      <div className="bg-secondary/50 py-4">
+        <div className="container mx-auto px-4">
+          <SearchBar />
+        </div>
+      </div>
 
-      <div className="container mx-auto px-4 pb-8">
+      {/* Hero Carousel */}
+      {featuredArticles && featuredArticles.length > 0 && (
+        <section className="mb-12">
+          <HeroCarousel articles={featuredArticles} />
+        </section>
+      )}
+
+      <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {/* Latest News Section */}
-            <section>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <span className="bg-secondary text-secondary-foreground px-3 py-1 rounded">Latest</span>
-                  News
-                </h2>
-                <Button variant="outline" asChild>
-                  <Link to="/news">View All</Link>
-                </Button>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Latest News</h2>
+              <Button variant="outline" asChild>
+                <Link to="/news">
+                  View All <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+
+            {isLoading ? (
+              <div className="text-center py-12">Loading latest news...</div>
+            ) : latestArticles && latestArticles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {latestArticles.map((article) => (
+                  <ArticleCard key={article.id} article={article} />
+                ))}
               </div>
-              
-              {isLoading ? (
-                <div className="text-center py-12">Loading news...</div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {articles?.map((article) => (
-                    <ArticleCard key={article.id} article={article} />
-                  ))}
-                </div>
-              )}
-            </section>
+            ) : (
+              <div className="text-center py-12">
+                <h3 className="text-lg font-semibold mb-4">No Articles Yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Check back soon for the latest news updates.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Newsletter Signup */}
-            <NewsletterSignup />
-            
             {/* Categories */}
             <Card>
               <CardHeader>
@@ -243,7 +224,7 @@ const Index = () => {
                     <Link
                       key={category.id}
                       to={`/category/${category.slug}`}
-                      className="block hover:text-primary transition-colors text-sm font-medium capitalize"
+                      className="block p-2 hover:bg-secondary rounded-md transition-colors capitalize"
                     >
                       {category.name}
                     </Link>
@@ -252,75 +233,33 @@ const Index = () => {
               </CardContent>
             </Card>
 
+            <NewsletterSignup />
+            
             {/* AdSense Placeholder */}
             <Card>
               <CardContent className="p-6 text-center bg-secondary/50">
                 <p className="text-sm text-muted-foreground mb-2">Advertisement</p>
                 <div className="h-64 bg-muted rounded flex items-center justify-center">
-                  <p className="text-muted-foreground">AdSense Ad Space</p>
+                  <p className="text-muted-foreground">Google AdSense</p>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Social Share */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Follow Us</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SocialShare 
+                  url="https://kikao-kenya-newsfeed.lovable.app"
+                  title="Kikao Kenya Newsfeed - Latest News from Kenya"
+                />
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-secondary text-secondary-foreground py-12 mt-16">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="md:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="bg-primary text-primary-foreground px-3 py-1 rounded font-bold text-xl">
-                  K
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold">Kikao Kenya Newsfeed</h3>
-                  <p className="text-sm opacity-80">Your trusted source for Kenyan news</p>
-                </div>
-              </div>
-              <p className="text-sm opacity-80 max-w-md">
-                Stay informed with the latest news, politics, entertainment, and sports from Kenya. 
-                We bring you credible and timely news updates from trusted sources.
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-3">Quick Links</h4>
-              <div className="space-y-2 text-sm">
-                <Link to="/" className="block hover:text-primary transition-colors">Home</Link>
-                <Link to="/news" className="block hover:text-primary transition-colors">News</Link>
-                <Link to="/category/politics" className="block hover:text-primary transition-colors">Politics</Link>
-                <Link to="/category/sports" className="block hover:text-primary transition-colors">Sports</Link>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-3">Categories</h4>
-              <div className="space-y-2 text-sm">
-                {categories?.slice(0, 5).map((category) => (
-                  <Link
-                    key={category.id}
-                    to={`/category/${category.slug}`}
-                    className="block hover:text-primary transition-colors capitalize"
-                  >
-                    {category.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <Separator className="my-8" />
-          
-          <div className="text-center">
-            <p className="text-sm opacity-80">
-              © 2024 Kikao Kenya Newsfeed. All rights reserved. | 
-              Powered by RSS feeds from trusted Kenyan news sources
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };
