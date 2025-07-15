@@ -10,7 +10,7 @@ import ArticleCard from "./ArticleCard";
 const TodayNews = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  const { data: todayArticles, isLoading, refetch } = useQuery({
+  const { data: todayArticles, refetch } = useQuery({
     queryKey: ['today-news'],
     queryFn: async () => {
       const today = new Date();
@@ -66,28 +66,6 @@ const TodayNews = () => {
     acc[source].push(article);
     return acc;
   }, {} as Record<string, any[]>) || {};
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold">Today's Kenya News</h2>
-          <div className="h-10 w-32 bg-muted rounded animate-pulse"></div>
-        </div>
-        <div className="grid gap-4">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-4">
-                <div className="h-4 bg-muted rounded mb-2"></div>
-                <div className="h-3 bg-muted rounded mb-4"></div>
-                <div className="h-3 bg-muted rounded w-1/2"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
