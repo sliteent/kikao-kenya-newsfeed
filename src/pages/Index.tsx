@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +12,6 @@ import TrendingTopics from "@/components/TrendingTopics";
 import NewsletterSignup from "@/components/NewsletterSignup";
 import SocialShare from "@/components/SocialShare";
 import SEOHead from "@/components/SEOHead";
-import RSSIcon from "@/components/RSSIcon";
 
 const Index = () => {
   // Fetch latest articles by category
@@ -162,32 +160,21 @@ const Index = () => {
             {/* RSS Feed Card */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <RSSIcon className="h-5 w-5 text-orange-500" />
-                  RSS Feeds
-                </CardTitle>
+                <CardTitle>RSS Feed</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Subscribe to our RSS feeds to get the latest news delivered to your RSS reader.
+                  Subscribe to our RSS feed to get the latest news delivered to your RSS reader.
                 </p>
-                <div className="space-y-2">
-                  <Button variant="outline" size="sm" asChild className="w-full">
-                    <a 
-                      href="https://bsqiylycebkxliggotxw.supabase.co/functions/v1/generate-rss"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <RSSIcon className="h-4 w-4 mr-2" />
-                      All News Feed
-                    </a>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild className="w-full">
-                    <Link to="/rss">
-                      View All Feeds
-                    </Link>
-                  </Button>
-                </div>
+                <Button variant="outline" size="sm" asChild className="w-full">
+                  <a 
+                    href="/feed.xml"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Subscribe to RSS
+                  </a>
+                </Button>
               </CardContent>
             </Card>
             
@@ -237,20 +224,18 @@ const Index = () => {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">RSS Feeds</h4>
+              <h4 className="font-semibold mb-4">RSS Feed</h4>
               <ul className="space-y-2 text-sm">
                 <li>
                   <a 
-                    href="https://bsqiylycebkxliggotxw.supabase.co/functions/v1/generate-rss" 
-                    className="text-muted-foreground hover:text-primary flex items-center gap-1"
+                    href="/feed.xml" 
+                    className="text-muted-foreground hover:text-primary"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <RSSIcon className="h-3 w-3" />
-                    All News Feed
+                    Subscribe to RSS
                   </a>
                 </li>
-                <li><Link to="/rss" className="text-muted-foreground hover:text-primary">View All Feeds</Link></li>
               </ul>
             </div>
           </div>
