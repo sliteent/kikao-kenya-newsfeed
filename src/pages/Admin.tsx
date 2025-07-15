@@ -116,7 +116,12 @@ const Admin = () => {
         .substring(0, 100);
 
       const articleData = {
-        ...values,
+        title: values.title,
+        content: values.content,
+        excerpt: values.excerpt || "",
+        category_id: values.category_id,
+        featured_image: values.featured_image || "",
+        is_featured: values.is_featured,
         slug: editingPost ? editingPost.slug : `${slug}-${Date.now()}`,
         status: 'published',
         published_at: new Date().toISOString(),
@@ -225,7 +230,13 @@ const Admin = () => {
         const { error } = await supabase
           .from('news_articles')
           .insert({
-            ...article,
+            title: article.title,
+            content: article.content,
+            excerpt: article.excerpt,
+            category_id: article.category_id,
+            featured_image: article.featured_image,
+            is_featured: article.is_featured,
+            author: article.author,
             slug: `${slug}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             status: 'published',
             published_at: new Date().toISOString(),
