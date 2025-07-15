@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Eye, Clock, User, ArrowLeft } from "lucide-react";
-import RSSIcon from "@/components/RSSIcon";
 import SEOHead from "@/components/SEOHead";
 
 const Category = () => {
@@ -132,19 +131,6 @@ const Category = () => {
               <p className="text-primary-foreground/80">
                 {category?.description || 'Browse articles in this category'}
               </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" asChild>
-                <a 
-                  href={`https://bsqiylycebkxliggotxw.supabase.co/functions/v1/generate-rss?category=${slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="RSS Feed for this category"
-                >
-                  <RSSIcon className="h-4 w-4 mr-2 text-orange-500" />
-                  RSS Feed
-                </a>
-              </Button>
             </div>
           </div>
         </div>

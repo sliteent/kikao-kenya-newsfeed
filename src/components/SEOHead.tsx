@@ -34,18 +34,8 @@ const SEOHead = ({
       <meta name="robots" content="index, follow" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       
-      {/* RSS Feed Discovery */}
-      <link rel="alternate" type="application/rss+xml" title="Kikao Kenya Newsfeed - All News" href={`${baseUrl}/api/feed.xml`} />
-      <link rel="alternate" type="application/rss+xml" title="Kikao Kenya Newsfeed - Politics" href={`${baseUrl}/api/feed.xml?category=politics`} />
-      <link rel="alternate" type="application/rss+xml" title="Kikao Kenya Newsfeed - Business" href={`${baseUrl}/api/feed.xml?category=business`} />
-      <link rel="alternate" type="application/rss+xml" title="Kikao Kenya Newsfeed - Sports" href={`${baseUrl}/api/feed.xml?category=sports`} />
-      <link rel="alternate" type="application/rss+xml" title="Kikao Kenya Newsfeed - Entertainment" href={`${baseUrl}/api/feed.xml?category=entertainment`} />
-      <link rel="alternate" type="application/rss+xml" title="Kikao Kenya Newsfeed - Technology" href={`${baseUrl}/api/feed.xml?category=technology`} />
-      
-      {/* Category-specific feed if on category page */}
-      {category && (
-        <link rel="alternate" type="application/rss+xml" title={`Kikao Kenya Newsfeed - ${category}`} href={`${baseUrl}/api/feed.xml?category=${category}`} />
-      )}
+      {/* Basic Feed Discovery */}
+      <link rel="alternate" type="application/atom+xml" title="Kikao Kenya Newsfeed" href={`${baseUrl}/feed.xml`} />
       
       {/* Open Graph Tags */}
       <meta property="og:title" content={fullTitle} />

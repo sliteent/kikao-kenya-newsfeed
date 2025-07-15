@@ -1,0 +1,16 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Kikao Kenya Newsfeed</title>
+  <link href="https://kikao-kenya-newsfeed.lovable.app/"/>
+  <updated>2025-07-15T10:00:00+03:00</updated>
+  <id>https://kikao-kenya-newsfeed.lovable.app/</id>
+
+  <entry>
+    <title>Ruto Launches New Agricultural Program</title>
+    <link href="https://kikao-kenya-newsfeed.lovable.app/article/ruto-agriculture"/>
+    <id>https://kikao-kenya-newsfeed.lovable.app/article/ruto-agriculture</id>
+    <updated>2025-07-15T08:00:00+03:00</updated>
+    <summary>President Ruto today launched a new agricultural initiative in Eldoret aimed at boosting food security.</summary>
+  </entry>
+</feed>
