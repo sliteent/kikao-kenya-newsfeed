@@ -6,34 +6,34 @@ const StaticFeaturedNews = () => {
   const featuredNews = [
     {
       id: 1,
-      title: "President Ruto Meets Governors Over Finance Bill Crisis",
-      excerpt: "Ruto engages county leaders amid mounting opposition to the 2025 Finance Bill.",
-      image: "https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=500&h=300&fit=crop",
-      url: "https://www.tuko.co.ke/politics/123456-ruto-meets-governors/",
-      source: "Tuko.co.ke"
+      title: "President Ruto Orders Police to Shoot Violent Protesters in the Leg",
+      excerpt: "Ruto's latest directive aims to curb protests by disabling rather than killing demonstrators after weeks of chaos.",
+      image: "https://cdn.reuters.com/resizer/.../kenya-protests.jpg",
+      url: "https://www.reuters.com/world/africa/kenyas-president-orders-police-shoot-violent-protesters-leg-2025-07-09/?utm_source=chatgpt.com",
+      source: "Reuters"
     },
     {
       id: 2,
-      title: "Nairobi Flash Floods Paralyze City Transport",
-      excerpt: "Heavy rains cause widespread damage and traffic snarl-ups in major Nairobi roads.",
-      image: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=500&h=300&fit=crop",
-      url: "https://www.nation.africa/kenya/news/nairobi-floods-chaos-2025/",
-      source: "Nation.africa"
+      title: "Death Toll from Kenya's Protests Rises to 31",
+      excerpt: "UN condemns Kenya's crackdown as over 30 killed, many by live bullets, during anti-government demonstrations.",
+      image: "https://media.apnews.com/.../kenya-victims.jpg",
+      url: "https://apnews.com/article/ca186b6c54e92852161a61b3d3f4c508?utm_source=chatgpt.com",
+      source: "AP News"
     },
     {
       id: 3,
-      title: "Safaricom Launches Free Internet Plan for Students",
-      excerpt: "The telco's initiative targets rural schools with subsidized internet access across Kenya.",
-      image: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=500&h=300&fit=crop",
-      url: "https://www.standardmedia.co.ke/business-news/article/2001507890/safaricom-launches-free-internet-plan",
-      source: "Standard Media"
+      title: "Nairobi Locked Down Amid Mass Clashes",
+      excerpt: "The capital city was sealed off as security forces battled youth-led protests across more than a dozen counties.",
+      image: "https://static.politico.com/.../nairobi-lockdown.jpg",
+      url: "https://www.politico.com/news/2025/07/07/nairobi-is-locked-down-as-kenyan-police-clash-with-protesters-00441970?utm_source=chatgpt.com",
+      source: "Politico"
     }
   ];
 
   return (
     <section className="mb-12">
       <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-        🔥 Featured News
+        🔥 Featured News - July 15, 2025
       </h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
