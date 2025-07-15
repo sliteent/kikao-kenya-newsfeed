@@ -107,7 +107,7 @@ const Index = () => {
         {/* Hero Section */}
         <ModernHero />
         
-        {/* Today's News Section */}
+        {/* Today's News Section - Featured prominently */}
         <section className="mb-12">
           <TodayNews />
         </section>
@@ -120,7 +120,7 @@ const Index = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">All News</h2>
+              <h2 className="text-2xl font-bold">All News Archive</h2>
               <Button variant="outline" asChild>
                 <Link to="/news">
                   View All <ArrowRight className="ml-2 h-4 w-4" />
@@ -149,9 +149,9 @@ const Index = () => {
               </div>
             ) : (
               <div className="text-center py-12">
-                <h3 className="text-lg font-semibold mb-4">No Articles Yet</h3>
+                <h3 className="text-lg font-semibold mb-4">No Archive Articles Yet</h3>
                 <p className="text-muted-foreground mb-6">
-                  Fresh news updates are being fetched. Check back soon!
+                  Check today's news section above for the latest updates.
                 </p>
                 <Button asChild>
                   <Link to="/admin">Manage Content</Link>
