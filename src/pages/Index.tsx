@@ -13,6 +13,7 @@ import SEOHead from "@/components/SEOHead";
 import TodayNews from "@/components/TodayNews";
 import FeaturedArticles from "@/components/FeaturedArticles";
 import StaticFeaturedNews from "@/components/StaticFeaturedNews";
+import RSSFeaturedNews from "@/components/RSSFeaturedNews";
 import ArticleCard from "@/components/ArticleCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -48,6 +49,9 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
         <ModernHero />
+        
+        {/* RSS Featured News Section */}
+        <RSSFeaturedNews />
         
         {/* Static Featured News Section */}
         <StaticFeaturedNews />
