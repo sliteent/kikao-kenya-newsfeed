@@ -174,6 +174,36 @@ export type Database = {
         }
         Relationships: []
       }
+      new_articles: {
+        Row: {
+          category: string | null
+          id: string
+          image_url: string | null
+          published_at: string | null
+          source_url: string | null
+          summary: string | null
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          id?: string
+          image_url?: string | null
+          published_at?: string | null
+          source_url?: string | null
+          summary?: string | null
+          title: string
+        }
+        Update: {
+          category?: string | null
+          id?: string
+          image_url?: string | null
+          published_at?: string | null
+          source_url?: string | null
+          summary?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       news_articles: {
         Row: {
           author: string | null

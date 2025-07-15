@@ -11,32 +11,28 @@ interface RSSItem {
   creator?: string;
 }
 
-interface RSSFeed {
-  items: RSSItem[];
-}
-
 const RSSFeaturedNews = () => {
   const [rssItems, setRssItems] = useState<RSSItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRSSFeed = async () => {
       try {
-        const CORS_PROXY = "https://api.allorigins.win/get?url=";
-        const feedUrl = encodeURIComponent("https://www.tuko.co.ke/rss");
+        // Using a more reliable CORS proxy
+        const CORS_PROXY = "https://corsproxy.io/?";
+        const feedUrl = "https://www.tuko.co.ke/rss";
         
-        const response = await fetch(`${CORS_PROXY}${feedUrl}`);
-        const data = await response.json();
+        const response = await fetch(`${CORS_PROXY}${encodeURIComponent(feedUrl)}`);
+        const data = await response.text();
         
         // Parse RSS using DOMParser (built-in browser API)
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(data.contents, 'text/xml');
+        const xmlDoc = parser.parseFromString(data, 'text/xml');
         
         const items = Array.from(xmlDoc.querySelectorAll('item')).slice(0, 3).map(item => ({
           title: item.querySelector('title')?.textContent || '',
           link: item.querySelector('link')?.textContent || '',
-          contentSnippet: item.querySelector('description')?.textContent?.slice(0, 120) + '...' || '',
+          contentSnippet: item.querySelector('description')?.textContent?.replace(/<[^>]*>/g, '').slice(0, 120) + '...' || '',
           pubDate: item.querySelector('pubDate')?.textContent || '',
           creator: item.querySelector('creator')?.textContent || 'Tuko'
         }));
@@ -44,42 +40,46 @@ const RSSFeaturedNews = () => {
         setRssItems(items);
       } catch (err) {
         console.error('Error fetching RSS feed:', err);
-        setError('Failed to load RSS feed');
-      } finally {
-        setLoading(false);
+        setError('RSS feed temporarily unavailable');
+        
+        // Fallback to static content if RSS fails
+        const fallbackItems = [
+          {
+            title: "Kenya's Latest Political Developments",
+            link: "https://www.tuko.co.ke/politics",
+            contentSnippet: "Stay updated with the latest political news and developments across Kenya...",
+            pubDate: new Date().toISOString(),
+            creator: "Tuko"
+          },
+          {
+            title: "Breaking Business News",
+            link: "https://www.tuko.co.ke/business",
+            contentSnippet: "Latest business trends and economic updates from Kenya and East Africa...",
+            pubDate: new Date().toISOString(),
+            creator: "Tuko"
+          },
+          {
+            title: "Sports Updates",
+            link: "https://www.tuko.co.ke/sports",
+            contentSnippet: "Get the latest sports news and updates from Kenyan and international sports...",
+            pubDate: new Date().toISOString(),
+            creator: "Tuko"
+          }
+        ];
+        setRssItems(fallbackItems);
       }
     };
 
     fetchRSSFeed();
   }, []);
 
-  if (loading) {
-    return (
-      <section className="featured-articles">
-        <h2>🔥 Featured News</h2>
-        <div className="featured-grid">
-          {[1, 2, 3].map(i => (
-            <Card key={i} className="featured-item animate-pulse">
-              <div className="w-full h-[180px] bg-gray-200"></div>
-              <CardContent className="p-3">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  if (error) {
+  if (error && rssItems.length === 0) {
     return (
       <section className="featured-articles">
         <h2>🔥 Featured News</h2>
         <div className="featured-grid">
           <div className="text-center text-red-500 col-span-full">
-            {error}
+            RSS feed temporarily unavailable. Please try again later.
           </div>
         </div>
       </section>
