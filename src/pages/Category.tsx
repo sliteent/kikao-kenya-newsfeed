@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Eye, Clock, User, ArrowLeft } from "lucide-react";
+import RSSIcon from "@/components/RSSIcon";
+import SEOHead from "@/components/SEOHead";
 
 const Category = () => {
   const { slug } = useParams();
@@ -107,6 +109,12 @@ const Category = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={`${category?.name} News - Kikao Kenya Newsfeed`}
+        description={`Latest ${category?.name?.toLowerCase()} news from Kenya. ${category?.description || ''}`}
+        category={category?.slug}
+      />
+      
       {/* Header */}
       <header className="bg-primary text-primary-foreground py-6">
         <div className="container mx-auto px-4">
@@ -117,13 +125,26 @@ const Category = () => {
                 Back to Home
               </Link>
             </Button>
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl font-bold">
                 {category?.name || 'Category'}
               </h1>
               <p className="text-primary-foreground/80">
                 {category?.description || 'Browse articles in this category'}
               </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" size="sm" asChild>
+                <a 
+                  href={`https://bsqiylycebkxliggotxw.supabase.co/functions/v1/generate-rss?category=${slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="RSS Feed for this category"
+                >
+                  <RSSIcon className="h-4 w-4 mr-2 text-orange-500" />
+                  RSS Feed
+                </a>
+              </Button>
             </div>
           </div>
         </div>

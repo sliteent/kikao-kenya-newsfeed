@@ -9,6 +9,7 @@ interface SEOHeadProps {
   type?: 'website' | 'article';
   publishedTime?: string;
   author?: string;
+  category?: string;
 }
 
 const SEOHead = ({
@@ -18,10 +19,12 @@ const SEOHead = ({
   url = "https://kikao-kenya-newsfeed.lovable.app",
   type = "website",
   publishedTime,
-  author
+  author,
+  category
 }: SEOHeadProps) => {
   const siteName = "Kikao Kenya Newsfeed";
   const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
+  const baseUrl = "https://kikao-kenya-newsfeed.lovable.app";
 
   return (
     <Helmet>
@@ -30,6 +33,19 @@ const SEOHead = ({
       <meta name="description" content={description} />
       <meta name="robots" content="index, follow" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      
+      {/* RSS Feed Discovery */}
+      <link rel="alternate" type="application/rss+xml" title="Kikao Kenya Newsfeed - All News" href={`${baseUrl}/api/feed.xml`} />
+      <link rel="alternate" type="application/rss+xml" title="Kikao Kenya Newsfeed - Politics" href={`${baseUrl}/api/feed.xml?category=politics`} />
+      <link rel="alternate" type="application/rss+xml" title="Kikao Kenya Newsfeed - Business" href={`${baseUrl}/api/feed.xml?category=business`} />
+      <link rel="alternate" type="application/rss+xml" title="Kikao Kenya Newsfeed - Sports" href={`${baseUrl}/api/feed.xml?category=sports`} />
+      <link rel="alternate" type="application/rss+xml" title="Kikao Kenya Newsfeed - Entertainment" href={`${baseUrl}/api/feed.xml?category=entertainment`} />
+      <link rel="alternate" type="application/rss+xml" title="Kikao Kenya Newsfeed - Technology" href={`${baseUrl}/api/feed.xml?category=technology`} />
+      
+      {/* Category-specific feed if on category page */}
+      {category && (
+        <link rel="alternate" type="application/rss+xml" title={`Kikao Kenya Newsfeed - ${category}`} href={`${baseUrl}/api/feed.xml?category=${category}`} />
+      )}
       
       {/* Open Graph Tags */}
       <meta property="og:title" content={fullTitle} />
@@ -53,6 +69,9 @@ const SEOHead = ({
       {type === 'article' && author && (
         <meta property="article:author" content={author} />
       )}
+      {type === 'article' && category && (
+        <meta property="article:section" content={category} />
+      )}
       
       {/* Schema.org JSON-LD */}
       <script type="application/ld+json">
@@ -75,7 +94,7 @@ const SEOHead = ({
               "name": siteName,
               "logo": {
                 "@type": "ImageObject",
-                "url": `${url}/placeholder.svg`
+                "url": `${baseUrl}/placeholder.svg`
               }
             }
           })

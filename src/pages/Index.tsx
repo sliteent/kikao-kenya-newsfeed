@@ -13,6 +13,7 @@ import TrendingTopics from "@/components/TrendingTopics";
 import NewsletterSignup from "@/components/NewsletterSignup";
 import SocialShare from "@/components/SocialShare";
 import SEOHead from "@/components/SEOHead";
+import RSSIcon from "@/components/RSSIcon";
 
 const Index = () => {
   // Fetch latest articles by category
@@ -158,6 +159,38 @@ const Index = () => {
           <div className="space-y-6">
             <NewsletterSignup />
             
+            {/* RSS Feed Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <RSSIcon className="h-5 w-5 text-orange-500" />
+                  RSS Feeds
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Subscribe to our RSS feeds to get the latest news delivered to your RSS reader.
+                </p>
+                <div className="space-y-2">
+                  <Button variant="outline" size="sm" asChild className="w-full">
+                    <a 
+                      href="https://bsqiylycebkxliggotxw.supabase.co/functions/v1/generate-rss"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <RSSIcon className="h-4 w-4 mr-2" />
+                      All News Feed
+                    </a>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild className="w-full">
+                    <Link to="/rss">
+                      View All Feeds
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
             {/* AdSense Placeholder */}
             <Card>
               <CardContent className="p-6 text-center bg-secondary/50">
@@ -186,10 +219,46 @@ const Index = () => {
       
       {/* Footer */}
       <footer className="bg-secondary/50 mt-16 py-8">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-muted-foreground">
-            © 2024 Kikao Kenya Newsfeed. All rights reserved.
-          </p>
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h3 className="font-semibold mb-4">Kikao Kenya Newsfeed</h3>
+              <p className="text-muted-foreground text-sm">
+                Your trusted source for the latest news from Kenya and around the world.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <ul className="space-y-2 text-sm">
+                <li><Link to="/news" className="text-muted-foreground hover:text-primary">All News</Link></li>
+                <li><Link to="/category/politics" className="text-muted-foreground hover:text-primary">Politics</Link></li>
+                <li><Link to="/category/business" className="text-muted-foreground hover:text-primary">Business</Link></li>
+                <li><Link to="/category/sports" className="text-muted-foreground hover:text-primary">Sports</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">RSS Feeds</h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a 
+                    href="https://bsqiylycebkxliggotxw.supabase.co/functions/v1/generate-rss" 
+                    className="text-muted-foreground hover:text-primary flex items-center gap-1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <RSSIcon className="h-3 w-3" />
+                    All News Feed
+                  </a>
+                </li>
+                <li><Link to="/rss" className="text-muted-foreground hover:text-primary">View All Feeds</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t pt-8 mt-8 text-center">
+            <p className="text-muted-foreground text-sm">
+              © 2024 Kikao Kenya Newsfeed. All rights reserved.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import RSSIcon from "./RSSIcon";
 
 const ModernNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -52,6 +53,12 @@ const ModernNavbar = () => {
               </Link>
             </Button>
 
+            <Button variant="ghost" size="sm" asChild title="RSS Feeds">
+              <Link to="/rss">
+                <RSSIcon className="h-4 w-4 text-orange-500" />
+              </Link>
+            </Button>
+
             {/* Mobile menu button */}
             <Button
               variant="ghost"
@@ -89,6 +96,13 @@ const ModernNavbar = () => {
                   {category.name}
                 </Link>
               ))}
+              <Link
+                to="/rss"
+                className="block px-3 py-2 text-gray-700 hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                RSS Feeds
+              </Link>
             </div>
           </div>
         )}
