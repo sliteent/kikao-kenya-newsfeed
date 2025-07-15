@@ -1,31 +1,49 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Plus, Trash2, BarChart, Loader2 } from "lucide-react";
+import { RefreshCw, Plus, Trash2, BarChart, Loader2, Edit, Eye } from "lucide-react";
 import { format } from "date-fns";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const articleSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
+  excerpt: z.string().optional(),
+  category_id: z.string().min(1, "Category is required"),
+  featured_image: z.string().optional(),
+  is_featured: z.boolean().default(false),
+});
 
 const Admin = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAddingPost, setIsAddingPost] = useState(false);
-  const [hasAutoFetched, setHasAutoFetched] = useState(false);
   const [isPublishingManual, setIsPublishingManual] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
-  const [newPost, setNewPost] = useState({
-    title: '',
-    content: '',
-    excerpt: '',
-    category_id: '',
-    featured_image: ''
+
+  const form = useForm<z.infer<typeof articleSchema>>({
+    resolver: zodResolver(articleSchema),
+    defaultValues: {
+      title: "",
+      content: "",
+      excerpt: "",
+      category_id: "",
+      featured_image: "",
+      is_featured: false,
+    },
   });
 
   // Fetch articles
@@ -77,7 +95,6 @@ const Admin = () => {
         description: `${data.message}. Added ${data.inserted} new articles from ${data.sources?.length || 'multiple'} sources.`,
       });
       queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
-      setHasAutoFetched(true);
     },
     onError: (error) => {
       console.error('Multi-source RSS fetch error:', error);
@@ -89,137 +106,49 @@ const Admin = () => {
     }
   });
 
-  // Manual article publishing
-  const publishManualArticles = useMutation({
-    mutationFn: async () => {
-      console.log('Publishing manual articles...');
-      
-      const sampleArticles = [
-        {
-          title: "Kenya's Economic Growth Projected to Rise in 2024",
-          content: "Kenya's economy shows promising signs of recovery with projected growth rates increasing due to improved agricultural output and tourism sector performance. The Central Bank of Kenya has maintained an optimistic outlook for the remainder of the year.",
-          excerpt: "Kenya's economy shows promising signs of recovery with projected growth rates increasing due to improved agricultural output.",
-          category_id: categories?.find(cat => cat.slug === 'business')?.id || categories?.[0]?.id,
-          source_url: "https://www.nation.co.ke/kenya/business/economy-growth-2024",
-          author: "Nation Media",
-          featured_image: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&h=600&fit=crop"
-        },
-        {
-          title: "Harambee Stars Prepare for AFCON Qualifiers",
-          content: "The Kenyan national football team, Harambee Stars, is intensifying preparations for the upcoming African Cup of Nations qualifiers. Coach Engin Firat has called up several local and international players for the crucial matches ahead.",
-          excerpt: "Harambee Stars intensify preparations for upcoming AFCON qualifiers with coach Engin Firat calling up key players.",
-          category_id: categories?.find(cat => cat.slug === 'sports')?.id || categories?.[0]?.id,
-          source_url: "https://www.standardmedia.co.ke/sports/football/harambee-stars-afcon",
-          author: "Standard Media",
-          featured_image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=600&fit=crop"
-        },
-        {
-          title: "New Education Reforms Announced by Ministry",
-          content: "The Ministry of Education has announced comprehensive reforms to improve the quality of education in Kenya. The new policies focus on enhancing teacher training, improving infrastructure, and integrating technology in classrooms.",
-          excerpt: "Ministry of Education announces comprehensive reforms focusing on teacher training and technology integration.",
-          category_id: categories?.find(cat => cat.slug === 'latest')?.id || categories?.[0]?.id,
-          source_url: "https://www.citizentv.co.ke/news/education-reforms-announced",
-          author: "Citizen Digital",
-          featured_image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=600&fit=crop"
-        },
-        {
-          title: "Nairobi Traffic Decongestion Plans Unveiled",
-          content: "The Nairobi Metropolitan Area Transport Authority has unveiled new plans to reduce traffic congestion in the capital. The initiative includes expanding public transport networks and implementing smart traffic management systems.",
-          excerpt: "Nairobi unveils new traffic decongestion plans including expanded public transport and smart traffic systems.",
-          category_id: categories?.find(cat => cat.slug === 'latest')?.id || categories?.[0]?.id,
-          source_url: "https://www.tuko.co.ke/nairobi/traffic-decongestion-plans",
-          author: "Tuko.co.ke",
-          featured_image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&h=600&fit=crop"
-        },
-        {
-          title: "Kenya's Tech Startup Scene Continues to Thrive",
-          content: "Kenya's technology sector continues to attract significant investment with several startups securing major funding rounds. The country remains a leading tech hub in East Africa, with innovations in fintech, agritech, and healthtech sectors.",
-          excerpt: "Kenya's tech startups secure major funding rounds, maintaining the country's position as East Africa's leading tech hub.",
-          category_id: categories?.find(cat => cat.slug === 'technology')?.id || categories?.[0]?.id,
-          source_url: "https://www.nation.co.ke/kenya/business/tech-startups-funding",
-          author: "Nation Media",
-          featured_image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&h=600&fit=crop"
-        }
-      ];
-
-      let insertedCount = 0;
-      
-      for (const article of sampleArticles) {
-        const slug = article.title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '')
-          .substring(0, 100);
-
-        const { error } = await supabase
-          .from('news_articles')
-          .insert({
-            ...article,
-            slug: `${slug}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            status: 'published',
-            published_at: new Date().toISOString(),
-            rss_guid: `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-          });
-
-        if (error) {
-          console.error('Error inserting manual article:', error);
-        } else {
-          insertedCount++;
-          console.log(`Inserted manual article: ${article.title}`);
-        }
-      }
-
-      return { inserted: insertedCount, total: sampleArticles.length };
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Manual Articles Published",
-        description: `Successfully published ${data.inserted} out of ${data.total} articles`,
-      });
-      queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
-    },
-    onError: (error) => {
-      console.error('Manual article publish error:', error);
-      toast({
-        title: "Publishing Failed",
-        description: error.message || "Failed to publish manual articles",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Create new post
-  const createPost = useMutation({
-    mutationFn: async (postData: any) => {
-      const slug = postData.title
+  // Create/Update article
+  const createArticleMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof articleSchema>) => {
+      const slug = values.title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
         .substring(0, 100);
 
-      const { error } = await supabase
-        .from('news_articles')
-        .insert({
-          ...postData,
-          slug: `${slug}-${Date.now()}`,
-          status: 'published',
-          published_at: new Date().toISOString()
-        });
-      
-      if (error) throw error;
+      const articleData = {
+        ...values,
+        slug: editingPost ? editingPost.slug : `${slug}-${Date.now()}`,
+        status: 'published',
+        published_at: new Date().toISOString(),
+        author: 'Admin',
+      };
+
+      if (editingPost) {
+        const { error } = await supabase
+          .from('news_articles')
+          .update(articleData)
+          .eq('id', editingPost.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('news_articles')
+          .insert(articleData);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       toast({
-        title: "Post Created",
-        description: "Your article has been published successfully",
+        title: editingPost ? "Article Updated" : "Article Created",
+        description: `Your article has been ${editingPost ? 'updated' : 'published'} successfully`,
       });
       queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
       setIsAddingPost(false);
-      setNewPost({ title: '', content: '', excerpt: '', category_id: '', featured_image: '' });
+      setEditingPost(null);
+      form.reset();
     },
     onError: (error) => {
       toast({
-        title: "Creation Failed",
+        title: editingPost ? "Update Failed" : "Creation Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -252,6 +181,79 @@ const Admin = () => {
     }
   });
 
+  // Create sample articles
+  const publishSampleArticles = useMutation({
+    mutationFn: async () => {
+      const sampleArticles = [
+        {
+          title: "Kenya's Tech Industry Reaches New Heights in 2024",
+          content: "Kenya's technology sector has experienced unprecedented growth this year, with local startups securing over $200 million in funding. The country continues to position itself as the Silicon Savannah of Africa, attracting international investors and fostering innovation across fintech, agritech, and healthtech sectors. Major companies like Safaricom and Equity Bank have launched new digital initiatives that are transforming how Kenyans interact with technology in their daily lives.",
+          excerpt: "Kenya's tech sector secures record funding as the country solidifies its position as Africa's Silicon Savannah.",
+          category_id: categories?.find(cat => cat.slug === 'technology')?.id || categories?.[0]?.id,
+          featured_image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&h=600&fit=crop",
+          is_featured: true,
+          author: "Tech Reporter",
+        },
+        {
+          title: "Harambee Stars Advance to AFCON Semi-Finals",
+          content: "In a thrilling match that kept fans on the edge of their seats, Kenya's national football team, Harambee Stars, secured their place in the AFCON semi-finals with a 2-1 victory over Nigeria. The team's stellar performance has united the country and renewed hope for Kenya's football future. Coach Engin Firat's tactical brilliance and the players' determination have created magic on the pitch.",
+          excerpt: "Harambee Stars make history with a stunning victory over Nigeria to reach AFCON semi-finals.",
+          category_id: categories?.find(cat => cat.slug === 'sports')?.id || categories?.[0]?.id,
+          featured_image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=600&fit=crop",
+          is_featured: true,
+          author: "Sports Desk",
+        },
+        {
+          title: "New Education Reforms Transform Kenyan Schools",
+          content: "The Ministry of Education has successfully implemented comprehensive reforms that are revolutionizing education in Kenya. The new Competency-Based Curriculum (CBC) is now showing positive results, with students demonstrating improved critical thinking skills and practical application of knowledge. Teachers have embraced digital learning tools, and infrastructure improvements have reached rural areas, ensuring equitable access to quality education.",
+          excerpt: "Revolutionary education reforms show promising results as Kenya embraces modern learning approaches.",
+          category_id: categories?.find(cat => cat.slug === 'latest')?.id || categories?.[0]?.id,
+          featured_image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=600&fit=crop",
+          is_featured: false,
+          author: "Education Correspondent",
+        },
+      ];
+
+      let insertedCount = 0;
+      for (const article of sampleArticles) {
+        const slug = article.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .substring(0, 100);
+
+        const { error } = await supabase
+          .from('news_articles')
+          .insert({
+            ...article,
+            slug: `${slug}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            status: 'published',
+            published_at: new Date().toISOString(),
+            rss_guid: `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          });
+
+        if (!error) {
+          insertedCount++;
+        }
+      }
+      return { inserted: insertedCount, total: sampleArticles.length };
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Sample Articles Published",
+        description: `Successfully published ${data.inserted} sample articles`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Publishing Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleRefreshRSS = async () => {
     setIsRefreshing(true);
     try {
@@ -261,25 +263,30 @@ const Admin = () => {
     }
   };
 
-  const handlePublishManualArticles = async () => {
+  const handlePublishSampleArticles = async () => {
     setIsPublishingManual(true);
     try {
-      await publishManualArticles.mutateAsync();
+      await publishSampleArticles.mutateAsync();
     } finally {
       setIsPublishingManual(false);
     }
   };
 
-  const handleCreatePost = () => {
-    if (!newPost.title || !newPost.content || !newPost.category_id) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in title, content, and category",
-        variant: "destructive",
-      });
-      return;
-    }
-    createPost.mutate(newPost);
+  const handleEditPost = (post: any) => {
+    setEditingPost(post);
+    form.reset({
+      title: post.title,
+      content: post.content || "",
+      excerpt: post.excerpt || "",
+      category_id: post.category_id || "",
+      featured_image: post.featured_image || "",
+      is_featured: post.is_featured || false,
+    });
+    setIsAddingPost(true);
+  };
+
+  const onSubmit = (values: z.infer<typeof articleSchema>) => {
+    createArticleMutation.mutate(values);
   };
 
   // Show loading state only for initial page load
@@ -303,7 +310,7 @@ const Admin = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">Content Management</h1>
-              <p className="text-primary-foreground/80">Manage Kikao Kenya Newsfeed - Multi-Source Aggregation</p>
+              <p className="text-primary-foreground/80">Manage Kikao Kenya Newsfeed</p>
             </div>
             <div className="flex items-center gap-4">
               <Button 
@@ -312,12 +319,12 @@ const Admin = () => {
                 disabled={isRefreshing}
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                Update from RSS Sources
+                Update RSS
               </Button>
 
               <Button 
                 variant="secondary" 
-                onClick={handlePublishManualArticles}
+                onClick={handlePublishSampleArticles}
                 disabled={isPublishingManual}
               >
                 {isPublishingManual ? (
@@ -325,62 +332,153 @@ const Admin = () => {
                 ) : (
                   <Plus className="h-4 w-4 mr-2" />
                 )}
-                Publish Sample Articles
+                Add Sample Articles
               </Button>
               
-              <Dialog open={isAddingPost} onOpenChange={setIsAddingPost}>
+              <Dialog open={isAddingPost} onOpenChange={(open) => {
+                setIsAddingPost(open);
+                if (!open) {
+                  setEditingPost(null);
+                  form.reset();
+                }
+              }}>
                 <DialogTrigger asChild>
                   <Button variant="secondary">
                     <Plus className="h-4 w-4 mr-2" />
-                    Add New Post
+                    Write Article
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Create New Post</DialogTitle>
+                    <DialogTitle>
+                      {editingPost ? 'Edit Article' : 'Write New Article'}
+                    </DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <Input 
-                      placeholder="Article Title"
-                      value={newPost.title}
-                      onChange={(e) => setNewPost({...newPost, title: e.target.value})}
-                    />
-                    <Select 
-                      value={newPost.category_id} 
-                      onValueChange={(value) => setNewPost({...newPost, category_id: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories?.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Input 
-                      placeholder="Featured Image URL (optional)"
-                      value={newPost.featured_image}
-                      onChange={(e) => setNewPost({...newPost, featured_image: e.target.value})}
-                    />
-                    <Textarea 
-                      placeholder="Article Excerpt"
-                      value={newPost.excerpt}
-                      onChange={(e) => setNewPost({...newPost, excerpt: e.target.value})}
-                      rows={3}
-                    />
-                    <Textarea 
-                      placeholder="Article Content"
-                      value={newPost.content}
-                      onChange={(e) => setNewPost({...newPost, content: e.target.value})}
-                      rows={10}
-                    />
-                    <Button onClick={handleCreatePost} className="w-full">
-                      Publish Article
-                    </Button>
-                  </div>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Title</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter article title..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="category_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Category</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {categories?.map((cat) => (
+                                  <SelectItem key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="featured_image"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Featured Image URL</FormLabel>
+                            <FormControl>
+                              <Input placeholder="https://example.com/image.jpg" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="excerpt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Excerpt</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Brief description of the article..." 
+                                rows={3} 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="content"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Content</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Write your article content here..." 
+                                rows={15} 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="is_featured"
+                          checked={form.watch('is_featured')}
+                          onChange={(e) => form.setValue('is_featured', e.target.checked)}
+                          className="rounded"
+                        />
+                        <label htmlFor="is_featured" className="text-sm font-medium">
+                          Mark as Featured Article
+                        </label>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button type="submit" disabled={createArticleMutation.isPending}>
+                          {createArticleMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : null}
+                          {editingPost ? 'Update Article' : 'Publish Article'}
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => {
+                            setIsAddingPost(false);
+                            setEditingPost(null);
+                            form.reset();
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
                 </DialogContent>
               </Dialog>
             </div>
@@ -389,7 +487,7 @@ const Admin = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Enhanced Stats */}
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
@@ -418,12 +516,12 @@ const Admin = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Views
+                Featured
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                {articles?.reduce((sum, a) => sum + a.view_count, 0) || 0}
+                {articles?.filter(a => a.is_featured).length || 0}
               </div>
             </CardContent>
           </Card>
@@ -431,15 +529,12 @@ const Admin = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Auto-Sync Status
+                Total Views
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-sm font-medium text-green-600">
-                ✓ Multi-Source Active
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Tuko, Nation, Standard, Citizen
+              <div className="text-2xl font-bold text-purple-600">
+                {articles?.reduce((sum, a) => sum + a.view_count, 0) || 0}
               </div>
             </CardContent>
           </Card>
@@ -457,7 +552,7 @@ const Admin = () => {
             {articles && articles.length > 0 ? (
               <div className="space-y-4">
                 {articles.map((article) => (
-                  <div key={article.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={article.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <Badge variant={article.status === 'published' ? 'default' : 'secondary'}>
@@ -469,38 +564,42 @@ const Admin = () => {
                           </Badge>
                         )}
                         {article.is_featured && (
-                          <Badge variant="default">Featured</Badge>
-                        )}
-                        {article.source_url && (
-                          <Badge variant="outline" className="text-xs">
-                            External
+                          <Badge variant="default" className="bg-yellow-600">
+                            Featured
                           </Badge>
                         )}
                       </div>
                       
-                      <h3 className="font-medium mb-1 line-clamp-1">{article.title}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {article.excerpt}
-                      </p>
+                      <h3 className="font-semibold mb-1 line-clamp-1">{article.title}</h3>
+                      {article.excerpt && (
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                          {article.excerpt}
+                        </p>
+                      )}
                       
-                      <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span>Views: {article.view_count}</span>
-                        <span>Published: {article.published_at ? format(new Date(article.published_at), 'MMM dd, yyyy') : 'Not published'}</span>
-                        {article.author && <span>By: {article.author}</span>}
-                        {article.source_url && (
-                          <a 
-                            href={article.source_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                          >
-                            View Source
-                          </a>
-                        )}
+                        <span>Likes: {article.like_count || 0}</span>
+                        <span>Comments: {article.comment_count || 0}</span>
+                        <span>Published: {article.published_at ? format(new Date(article.published_at), 'MMM dd, yyyy') : 'Draft'}</span>
                       </div>
                     </div>
                     
                     <div className="flex gap-2 ml-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditPost(article)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(`/article/${article.slug}`, '_blank')}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
@@ -514,19 +613,13 @@ const Admin = () => {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">
-                  {refreshRSS.isPending ? 'Fetching latest news in background...' : 'No articles found yet.'}
-                </p>
+                <p className="text-muted-foreground mb-4">No articles found yet.</p>
                 <div className="flex gap-2 justify-center">
-                  <Button onClick={handleRefreshRSS} disabled={isRefreshing}>
-                    {isRefreshing ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                    )}
-                    Fetch from RSS Sources
+                  <Button onClick={() => setIsAddingPost(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Write Your First Article
                   </Button>
-                  <Button onClick={handlePublishManualArticles} disabled={isPublishingManual} variant="outline">
+                  <Button onClick={handlePublishSampleArticles} disabled={isPublishingManual} variant="outline">
                     {isPublishingManual ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : (
