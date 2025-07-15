@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import TrendingTopics from "@/components/TrendingTopics";
 import NewsletterSignup from "@/components/NewsletterSignup";
 import SocialShare from "@/components/SocialShare";
 import SEOHead from "@/components/SEOHead";
+import TodayNews from "@/components/TodayNews";
 
 const Index = () => {
   // Fetch latest articles by category
@@ -105,6 +107,11 @@ const Index = () => {
         {/* Hero Section */}
         <ModernHero />
         
+        {/* Today's News Section */}
+        <section className="mb-12">
+          <TodayNews />
+        </section>
+        
         {/* Trending Topics */}
         <TrendingTopics />
         
@@ -113,7 +120,7 @@ const Index = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Latest News</h2>
+              <h2 className="text-2xl font-bold">All News</h2>
               <Button variant="outline" asChild>
                 <Link to="/news">
                   View All <ArrowRight className="ml-2 h-4 w-4" />

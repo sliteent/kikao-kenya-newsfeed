@@ -47,6 +47,18 @@ const newsSources: NewsSource[] = [
     url: 'https://citizentv.co.ke/feed/',
     categoryMapping: { 'politics': 'Politics', 'entertainment': 'Entertainment', 'sports': 'Sports' },
     parser: parseStandardRSS
+  },
+  {
+    name: 'Kenyans.co.ke',
+    url: 'https://www.kenyans.co.ke/rss',
+    categoryMapping: { 'politics': 'Politics', 'business': 'Business', 'sports': 'Sports' },
+    parser: parseStandardRSS
+  },
+  {
+    name: 'The Star',
+    url: 'https://www.the-star.co.ke/rss',
+    categoryMapping: { 'politics': 'Politics', 'business': 'Business', 'sports': 'Sports' },
+    parser: parseStandardRSS
   }
 ]
 
@@ -54,6 +66,10 @@ function parseStandardRSS(xmlText: string): RSSItem[] {
   try {
     const items: RSSItem[] = []
     const itemMatches = xmlText.match(/<item>[\s\S]*?<\/item>/g) || []
+    
+    // Only get today's articles
+    const today = new Date()
+    const todayStr = today.toDateString()
     
     for (const itemXml of itemMatches) {
       const title = itemXml.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] || 
@@ -63,6 +79,12 @@ function parseStandardRSS(xmlText: string): RSSItem[] {
                          itemXml.match(/<description>(.*?)<\/description>/)?.[1] || ''
       const pubDate = itemXml.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || ''
       const guid = itemXml.match(/<guid.*?>(.*?)<\/guid>/)?.[1] || link
+      
+      // Check if article is from today
+      const articleDate = pubDate ? new Date(pubDate) : new Date()
+      if (articleDate.toDateString() !== todayStr) {
+        continue // Skip articles not from today
+      }
       
       // Try to extract image from various possible locations
       const imageUrl = itemXml.match(/<media:content.*?url="([^"]*)".*?>/)?.[1] ||
@@ -121,21 +143,50 @@ function createSlug(title: string): string {
 
 function extractExcerpt(content: string): string {
   const cleanText = content.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ')
-  return cleanText.substring(0, 200).trim() + (cleanText.length > 200 ? '...' : '')
+  const sentences = cleanText.split('. ')
+  const excerpt = sentences.slice(0, 2).join('. ')
+  return excerpt.length > 200 ? excerpt.substring(0, 200) + '...' : excerpt + (sentences.length > 2 ? '...' : '')
 }
 
 function categorizeArticle(title: string, description: string): string {
   const text = (title + ' ' + description).toLowerCase()
   
-  if (text.includes('politics') || text.includes('government') || text.includes('parliament') || text.includes('president')) {
+  // Breaking news indicators
+  if (text.includes('breaking') || text.includes('urgent') || text.includes('alert')) {
+    return 'latest'
+  }
+  
+  // Politics
+  if (text.includes('politics') || text.includes('government') || text.includes('parliament') || 
+      text.includes('president') || text.includes('ruto') || text.includes('raila') || 
+      text.includes('election') || text.includes('mp') || text.includes('senator')) {
     return 'politics'
-  } else if (text.includes('sports') || text.includes('football') || text.includes('rugby') || text.includes('athletics')) {
+  }
+  
+  // Sports
+  if (text.includes('sports') || text.includes('football') || text.includes('rugby') || 
+      text.includes('athletics') || text.includes('harambee') || text.includes('gor mahia') || 
+      text.includes('afc leopards') || text.includes('premier league')) {
     return 'sports'
-  } else if (text.includes('business') || text.includes('economy') || text.includes('market') || text.includes('finance')) {
+  }
+  
+  // Business
+  if (text.includes('business') || text.includes('economy') || text.includes('market') || 
+      text.includes('finance') || text.includes('banking') || text.includes('investment') || 
+      text.includes('shilling') || text.includes('economic')) {
     return 'business'
-  } else if (text.includes('entertainment') || text.includes('celebrity') || text.includes('music') || text.includes('movie')) {
+  }
+  
+  // Entertainment
+  if (text.includes('entertainment') || text.includes('celebrity') || text.includes('music') || 
+      text.includes('movie') || text.includes('film') || text.includes('concert') || 
+      text.includes('artist')) {
     return 'entertainment'
-  } else if (text.includes('technology') || text.includes('tech') || text.includes('digital') || text.includes('internet')) {
+  }
+  
+  // Technology
+  if (text.includes('technology') || text.includes('tech') || text.includes('digital') || 
+      text.includes('internet') || text.includes('mobile') || text.includes('app')) {
     return 'technology'
   }
   
@@ -153,7 +204,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    console.log('Starting multi-source RSS fetch process...')
+    console.log('Starting Kenyan news aggregation process...')
 
     let totalProcessed = 0
     let totalInserted = 0
@@ -174,7 +225,7 @@ Deno.serve(async (req) => {
         console.log(`Processing source: ${source.name}`)
         
         const items = await fetchRSSFeed(source.url)
-        console.log(`Found ${items.length} items from ${source.name}`)
+        console.log(`Found ${items.length} today's items from ${source.name}`)
 
         let sourceInserted = 0
 
@@ -211,7 +262,7 @@ Deno.serve(async (req) => {
               source_url: item.link,
               rss_guid: item.guid,
               category_id: categoryId,
-              status: 'published', // Auto-publish or set to 'pending' for approval
+              status: 'published',
               author: source.name,
               published_at: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString()
             })
@@ -239,20 +290,20 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`Multi-source RSS fetch completed. Total processed: ${totalProcessed}, Total inserted: ${totalInserted}`)
+    console.log(`Kenyan news aggregation completed. Total processed: ${totalProcessed}, Total inserted: ${totalInserted}`)
 
     return new Response(JSON.stringify({ 
       success: true, 
       processed: totalProcessed, 
       inserted: totalInserted,
       sources: processedSources,
-      message: `Successfully processed ${newsSources.length} news sources`
+      message: `Successfully processed ${newsSources.length} Kenyan news sources`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
 
   } catch (error) {
-    console.error('Multi-source RSS fetch error:', error)
+    console.error('Kenyan news aggregation error:', error)
     return new Response(JSON.stringify({ 
       error: error.message,
       success: false 
