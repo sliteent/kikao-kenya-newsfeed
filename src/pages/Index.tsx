@@ -1,11 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { Eye, Clock, User, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import ModernNavbar from "@/components/ModernNavbar";
 import ModernHero from "@/components/ModernHero";
@@ -14,6 +11,9 @@ import NewsletterSignup from "@/components/NewsletterSignup";
 import SocialShare from "@/components/SocialShare";
 import SEOHead from "@/components/SEOHead";
 import TodayNews from "@/components/TodayNews";
+import FeaturedArticles from "@/components/FeaturedArticles";
+import ArticleCard from "@/components/ArticleCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Index = () => {
   // Fetch latest articles by category
@@ -35,65 +35,6 @@ const Index = () => {
     }
   });
 
-  const ArticleCard = ({ article }: { article: any }) => (
-    <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer h-full">
-      <Link to={`/article/${article.slug}`}>
-        <div className="relative">
-          {article.featured_image && (
-            <div className="aspect-video overflow-hidden rounded-t-lg">
-              <img 
-                src={article.featured_image} 
-                alt={article.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-          )}
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              {article.news_categories && (
-                <Badge variant="secondary" className="text-xs">
-                  {article.news_categories.name}
-                </Badge>
-              )}
-              {article.is_featured && (
-                <Badge variant="default" className="text-xs">Featured</Badge>
-              )}
-            </div>
-            
-            <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors mb-2">
-              {article.title}
-            </h3>
-            
-            {article.excerpt && (
-              <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-                {article.excerpt}
-              </p>
-            )}
-            
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex items-center gap-3">
-                {article.author && (
-                  <div className="flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    <span>{article.author}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  <span>{format(new Date(article.published_at), 'MMM dd')}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Eye className="h-3 w-3" />
-                  <span>{article.view_count}</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </div>
-      </Link>
-    </Card>
-  );
-
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
@@ -107,7 +48,10 @@ const Index = () => {
         {/* Hero Section */}
         <ModernHero />
         
-        {/* Today's News Section - Featured prominently */}
+        {/* Featured Articles Section */}
+        <FeaturedArticles />
+        
+        {/* Today's News Section */}
         <section className="mb-12">
           <TodayNews />
         </section>

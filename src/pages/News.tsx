@@ -2,14 +2,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
-import { Eye, Clock, User, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import NewsletterSignup from "@/components/NewsletterSignup";
+import ArticleCard from "@/components/ArticleCard";
+import { Card, CardContent } from "@/components/ui/card";
 
 const ARTICLES_PER_PAGE = 12;
 
@@ -53,57 +51,6 @@ const News = () => {
   });
 
   const totalPages = Math.ceil((totalCount || 0) / ARTICLES_PER_PAGE);
-
-  const ArticleCard = ({ article }: { article: any }) => (
-    <Card className="hover:shadow-lg transition-shadow h-full">
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-2 mb-2">
-          {article.news_categories && (
-            <Badge variant="secondary" className="text-xs">
-              {article.news_categories.name}
-            </Badge>
-          )}
-          {article.is_featured && <Badge variant="default">Featured</Badge>}
-        </div>
-        <CardTitle className="text-lg line-clamp-2">
-          <Link 
-            to={`/article/${article.slug}`}
-            className="hover:text-primary transition-colors"
-          >
-            {article.title}
-          </Link>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col justify-between flex-1">
-        <div>
-          <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-            {article.excerpt}
-          </p>
-        </div>
-        <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
-          <div className="flex items-center gap-4">
-            {article.author && (
-              <div className="flex items-center gap-1">
-                <User className="h-3 w-3" />
-                <span>{article.author}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              <span>{format(new Date(article.published_at), 'MMM dd')}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Eye className="h-3 w-3" />
-              <span>{article.view_count}</span>
-            </div>
-          </div>
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`/article/${article.slug}`}>Read More</Link>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
 
   return (
     <div className="min-h-screen bg-background">

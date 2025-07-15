@@ -11,6 +11,8 @@ import { Eye, Clock, User, ArrowLeft, ExternalLink } from "lucide-react";
 import { useEffect } from "react";
 import SocialShare from "@/components/SocialShare";
 import NewsletterSignup from "@/components/NewsletterSignup";
+import CommentsSection from "@/components/CommentsSection";
+import ArticleCard from "@/components/ArticleCard";
 
 const Article = () => {
   const { slug } = useParams();
@@ -197,6 +199,11 @@ const Article = () => {
               </div>
             )}
 
+            {/* Comments Section */}
+            <div className="mb-8">
+              <CommentsSection articleId={article.id} />
+            </div>
+
             {/* AdSense Placeholder */}
             <Card className="mb-8">
               <CardContent className="p-6 text-center bg-secondary/50">
@@ -213,28 +220,7 @@ const Article = () => {
                 <h3 className="text-2xl font-bold mb-6">Related Articles</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {relatedArticles.map((relatedArticle) => (
-                    <Card key={relatedArticle.id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-4">
-                        <Badge variant="outline" className="mb-2">
-                          {relatedArticle.news_categories?.name}
-                        </Badge>
-                        <h4 className="font-semibold mb-2 line-clamp-2">
-                          <Link
-                            to={`/article/${relatedArticle.slug}`}
-                            className="hover:text-primary transition-colors"
-                          >
-                            {relatedArticle.title}
-                          </Link>
-                        </h4>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                          {relatedArticle.excerpt}
-                        </p>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{format(new Date(relatedArticle.published_at), 'MMM dd')}</span>
-                          <span>{relatedArticle.view_count} views</span>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <ArticleCard key={relatedArticle.id} article={relatedArticle} />
                   ))}
                 </div>
               </section>

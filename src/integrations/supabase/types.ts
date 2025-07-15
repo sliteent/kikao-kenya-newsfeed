@@ -47,6 +47,70 @@ export type Database = {
         }
         Relationships: []
       }
+      article_comments: {
+        Row: {
+          article_id: string | null
+          content: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          article_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          article_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_comments_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "news_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_likes: {
+        Row: {
+          article_id: string | null
+          created_at: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          article_id?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          article_id?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_likes_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "news_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -114,12 +178,14 @@ export type Database = {
         Row: {
           author: string | null
           category_id: string | null
+          comment_count: number | null
           content: string | null
           created_at: string
           excerpt: string | null
           featured_image: string | null
           id: string
           is_featured: boolean
+          like_count: number | null
           published_at: string | null
           rss_guid: string | null
           slug: string
@@ -132,12 +198,14 @@ export type Database = {
         Insert: {
           author?: string | null
           category_id?: string | null
+          comment_count?: number | null
           content?: string | null
           created_at?: string
           excerpt?: string | null
           featured_image?: string | null
           id?: string
           is_featured?: boolean
+          like_count?: number | null
           published_at?: string | null
           rss_guid?: string | null
           slug: string
@@ -150,12 +218,14 @@ export type Database = {
         Update: {
           author?: string | null
           category_id?: string | null
+          comment_count?: number | null
           content?: string | null
           created_at?: string
           excerpt?: string | null
           featured_image?: string | null
           id?: string
           is_featured?: boolean
+          like_count?: number | null
           published_at?: string | null
           rss_guid?: string | null
           slug?: string

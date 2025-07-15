@@ -1,12 +1,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { Eye, Clock, User, ExternalLink, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
+import ArticleCard from "./ArticleCard";
 
 const TodayNews = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -68,74 +67,6 @@ const TodayNews = () => {
     return acc;
   }, {} as Record<string, any[]>) || {};
 
-  const ArticleCard = ({ article }: { article: any }) => (
-    <Card className="hover:shadow-lg transition-all duration-300 mb-4">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <Badge variant="secondary" className="text-xs">
-                {article.news_categories?.name || 'Latest'}
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                {article.author || 'Kenya News'}
-              </Badge>
-            </div>
-            
-            <h3 className="font-semibold text-lg mb-2 line-clamp-2">
-              <a 
-                href={article.source_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="hover:text-primary transition-colors"
-              >
-                {article.title}
-              </a>
-            </h3>
-            
-            {article.excerpt && (
-              <p className="text-muted-foreground text-sm mb-3 line-clamp-3">
-                {article.excerpt}
-              </p>
-            )}
-            
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  <span>{format(new Date(article.published_at), 'HH:mm')}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Eye className="h-3 w-3" />
-                  <span>{article.view_count}</span>
-                </div>
-              </div>
-              <a 
-                href={article.source_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 hover:text-primary transition-colors text-blue-600"
-              >
-                <ExternalLink className="h-3 w-3" />
-                <span>Read at source</span>
-              </a>
-            </div>
-          </div>
-          
-          {article.featured_image && (
-            <div className="w-24 h-24 flex-shrink-0">
-              <img 
-                src={article.featured_image} 
-                alt={article.title}
-                className="w-full h-full object-cover rounded-lg"
-              />
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -195,9 +126,9 @@ const TodayNews = () => {
             <div key={source} className="space-y-4">
               <div className="flex items-center gap-2">
                 <h3 className="text-xl font-semibold text-primary">{source}</h3>
-                <Badge variant="outline">{articles.length} articles</Badge>
+                <span className="text-sm text-muted-foreground">({articles.length} articles)</span>
               </div>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {articles.map((article) => (
                   <ArticleCard key={article.id} article={article} />
                 ))}
