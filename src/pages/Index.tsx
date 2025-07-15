@@ -12,6 +12,7 @@ import SocialShare from "@/components/SocialShare";
 import SEOHead from "@/components/SEOHead";
 import TodayNews from "@/components/TodayNews";
 import FeaturedArticles from "@/components/FeaturedArticles";
+import StaticFeaturedNews from "@/components/StaticFeaturedNews";
 import ArticleCard from "@/components/ArticleCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -48,7 +49,10 @@ const Index = () => {
         {/* Hero Section */}
         <ModernHero />
         
-        {/* Featured Articles Section */}
+        {/* Static Featured News Section */}
+        <StaticFeaturedNews />
+        
+        {/* Dynamic Featured Articles Section */}
         <FeaturedArticles />
         
         {/* Today's News Section */}
